@@ -1,0 +1,105 @@
+schema_version: 1
+name: engine_scene
+scene_type: engine_scene
+
+metadata:
+  coordinate_convention: mesh_frame_as_world
+  note: >
+    The scaled exported engine mesh frame is used directly as the engine-local
+    frame. The engine mesh/body stays at engine.pose.position_m. A calibrated
+    frame offset is applied only to frame: engine annotations and diagnostics.
+    BBox is for diagnostics and visualization only and does not define the
+    world origin.
+
+engine:
+  assets:
+    visual_mesh: ../../assets/engine/meshes/engine_visual.stl
+    collision_mesh: ../../assets/engine/collision/engine_collision.stl
+    collision_mesh_offset_m: [0.0, 0.0, 0.0]
+  scale: 0.001
+  pose:
+    position_m: [-0.5, -2.5, -1.75]
+    frame_offset_m: [0.114155, 0.530382, 0.010]
+    quat_wxyz: [1.0, 0.0, 0.0, 0.0]
+
+preview_visualization:
+  visual_mesh_rgba: [0.66, 0.68, 0.71, 1.0]
+  visual_material:
+    name: engine_silver
+    emission: 0.0
+    specular: 0.72
+    shininess: 0.48
+  collision_mesh_rgba: [0.90, 0.20, 0.15, 0.28]
+  bbox_rgba: [1.0, 1.0, 0.0, 0.85]
+  bbox_edge_radius_m: 0.002
+  engine_axis_length_m: 0.35
+  engine_axis_radius_m: 0.0035
+  engine_x_rgba: [1.0, 0.0, 0.0, 1.0]
+  engine_y_rgba: [0.0, 0.8, 0.0, 1.0]
+  engine_z_rgba: [0.1, 0.2, 1.0, 1.0]
+  regions:
+    circular_port: [0.10, 0.60, 1.0, 0.60]
+    roi_sphere: [0.20, 1.0, 0.40, 0.35]
+    roi_box: [0.20, 1.0, 0.40, 0.35]
+    surface_patch: [1.0, 0.70, 0.10, 0.55]
+    box: [1.0, 0.10, 0.10, 0.35]
+  exploration_start_point_rgba: [1.0, 0.45, 0.10, 0.95]
+  exploration_start_point_radius_m: 0.010
+  exploration_start_normal_rgba: [1.0, 0.70, 0.10, 0.90]
+  exploration_start_normal_length_m: 0.01
+  exploration_start_normal_radius_m: 0.002
+  exploration_path_start_marker_rgba: [0.10, 0.70, 1.0, 0.95]
+  exploration_path_end_marker_rgba: [1.0, 0.85, 0.10, 0.95]
+  exploration_path_marker_radius_m: 0.014
+
+regions:
+  entry_port:
+    type: circular_port
+    frame: engine
+    center_m: [0.442, 1.58169, 1.74693]
+    normal: [0.0, -0.96436878, 0.26456163]
+    radius_m: 0.045
+    visualization:
+      rgba: [0.10, 0.60, 1.0, 0.60]
+    description: Measured outer nozzle arc center and initial arm entry point.
+exploration_start:
+  frame: engine
+  point_m: [0.442, 1.58169, 1.74693]
+  normal: [0.0, -0.96436878, 0.26456163]
+  visualization:
+    point_rgba: [1.0, 0.45, 0.10, 0.95]
+    point_radius_m: 0.010
+    normal_rgba: [1.0, 0.70, 0.10, 0.90]
+    normal_length_m: 0.01
+    normal_radius_m: 0.002
+  description: Initial exploration start point. Same as regions.entry_port.center_m.
+
+exploration_paths:
+  - name: nozzle_axis_entry
+    type: polyline
+    frame: engine
+    enabled: true
+    points_m:
+      - [0.442, 1.58169, 1.74693]
+      - [0.442, 0.37281, 2.07857]
+    radius_m: 0.008
+    rgba: [0.1, 1.0, 0.3, 0.8]
+    start_marker_rgba: [0.10, 0.70, 1.0, 0.95]
+    end_marker_rgba: [1.0, 0.85, 0.10, 0.95]
+    marker_radius_m: 0.014
+
+diagnostics:
+  bbox:
+    frame: engine
+    purpose: diagnostic_visualization_only
+
+primitive_collision_geoms:
+  - name: debug_box_1
+    type: box
+    frame: world
+    enabled: true
+    position_m: [0.114155, 0.530382, 0.010]
+    size_m: [0.02, 0.02, 0.02]
+    quat_wxyz: [1.0, 0.0, 0.0, 0.0]
+    rgba: [1.0, 0.2, 0.2, 0.6]
+    note: Temporary preview box

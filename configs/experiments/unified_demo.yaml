@@ -1,0 +1,10 @@
+name: confined_dual_operation
+workspace: engine_embodiment
+controller:
+  phases: [initialize, base_approach, cooperative_insertion, base_lock, local_operation, retreat, complete]
+  observer_mode: task_assist
+  compatible_tendon_control: true
+diagnostics:
+  save_timeseries: true
+  save_metrics: true
+

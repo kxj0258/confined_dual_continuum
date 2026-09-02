@@ -1,0 +1,17 @@
+segment_lengths_m: [0.0365, 0.0365, 0.0365]
+tendon_routes:
+  - {angle_deg: 60, radial_offset_m: 0.005, path_segment_indices: [0]}
+  - {angle_deg: 180, radial_offset_m: 0.005, path_segment_indices: [0]}
+  - {angle_deg: 300, radial_offset_m: 0.005, path_segment_indices: [0]}
+  - {angle_deg: 0, radial_offset_m: 0.005, path_segment_indices: [0, 1]}
+  - {angle_deg: 120, radial_offset_m: 0.005, path_segment_indices: [0, 1]}
+  - {angle_deg: 240, radial_offset_m: 0.005, path_segment_indices: [0, 1]}
+  - {angle_deg: 90, radial_offset_m: 0.005, path_segment_indices: [0, 1, 2]}
+  - {angle_deg: 210, radial_offset_m: 0.005, path_segment_indices: [0, 1, 2]}
+  - {angle_deg: 330, radial_offset_m: 0.005, path_segment_indices: [0, 1, 2]}
+limits:
+  minimum_m: -0.020
+  maximum_m: 0.020
+  maximum_rate_mps: 0.050
+  maximum_lead_m: 0.0005
+
