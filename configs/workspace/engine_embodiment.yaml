@@ -13,7 +13,9 @@ metadata:
 
 engine:
   assets:
-    visual_mesh: ../../assets/engine/meshes/engine_visual.stl
+    visual_meshes:
+      - ../../assets/engine/meshes/engine_visual_part_1.stl
+      - ../../assets/engine/meshes/engine_visual_part_2.stl
     collision_mesh: ../../assets/engine/collision/engine_collision.stl
     collision_mesh_offset_m: [0.0, 0.0, 0.0]
   scale: 0.001
