@@ -20,3 +20,12 @@
 
 架构与迁移范围见 `docs/architecture.md` 和 `docs/migration_inventory.md`。
 
+## 正式统一 Demo
+
+安装仿真依赖后，通过唯一入口运行完整专利控制链：
+
+```powershell
+cdc-run --config configs/experiments/unified_demo.yaml
+```
+
+需要可视化时显式增加 `--viewer`。运行结果写入配置指定目录，包括完整时序和汇总指标。

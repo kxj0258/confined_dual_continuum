@@ -1,4 +1,4 @@
-# 专利最小实现架构
+# 专利正式实现架构
 
 ## 依赖方向
 
@@ -9,9 +9,11 @@ workspace / actuation / kinematics
 ↑
 task / coordination
 ↑
-application / experiments
+application
 ↑
 adapters
+↑
+cli
 ```
 
 任何底层模块不得反向导入 application、experiments、MuJoCo 或可视化模块。
@@ -23,8 +25,10 @@ adapters
 - `task`：阶段状态机和任务级转换条件，不求解肌腱命令。
 - `coordination`：Executor、Observer、双臂安全和非对称命令合并。
 - `actuation`：弯曲空间与物理肌腱映射、相容约束执行。
-- `adapters`：仿真或物理设备边界。
-- `experiments`：专利 Demo、消融和指标采集，不进入控制核心。
+- `application`：统一控制器、后端端口和完整任务会话。
+- `adapters`：实现应用端口，不被应用层反向依赖。
+- `diagnostics`：正式实验时序和汇总记录。
+- `cli`：装配配置、MuJoCo 和可选 viewer，是唯一可执行入口。
 
 ## 核心数据流
 
@@ -38,4 +42,3 @@ WorkspaceSnapshot + OperationProgress
 → RobotCommand
 → Backend
 ```
-

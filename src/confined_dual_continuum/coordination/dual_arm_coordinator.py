@@ -5,7 +5,10 @@ from dataclasses import dataclass
 import numpy as np
 
 from confined_dual_continuum.coordination.executor_controller import ExecutorController
-from confined_dual_continuum.coordination.interarm_safety import InterArmSafety
+from confined_dual_continuum.coordination.interarm_safety import (
+    InterArmSafety,
+    InterArmSafetyDecision,
+)
 from confined_dual_continuum.coordination.observer_controller import ObserverController
 from confined_dual_continuum.domain.state import ArmCommand, RobotCommand, RobotState
 from confined_dual_continuum.task.phase_machine import PhaseActivation
@@ -31,11 +34,9 @@ class DualArmCoordinator:
         executor_jacobian: np.ndarray,
         observer_jacobian: np.ndarray,
         base_twist_world: np.ndarray,
+        safety: InterArmSafetyDecision | None = None,
     ) -> RobotCommand:
-        safety = self.safety.evaluate(
-            state.executor.centerline_world,
-            state.observer.centerline_world,
-        )
+        safety = safety or self.evaluate_safety(state)
         executor_rate = (
             self.executor.solve(
                 state.executor.tip_pose.position,
@@ -63,4 +64,10 @@ class DualArmCoordinator:
             base_twist_world=base,
             executor=ArmCommand(executor_rate),
             observer=ArmCommand(observer_rate),
+        )
+
+    def evaluate_safety(self, state: RobotState) -> InterArmSafetyDecision:
+        return self.safety.evaluate(
+            state.executor.centerline_world,
+            state.observer.centerline_world,
         )

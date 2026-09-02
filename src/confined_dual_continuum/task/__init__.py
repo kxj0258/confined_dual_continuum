@@ -8,13 +8,20 @@ from confined_dual_continuum.task.phase_machine import (
     ConfinedOperationStateMachine,
     PhaseActivation,
 )
+from confined_dual_continuum.task.operation_director import (
+    OperationDirector,
+    OperationPlan,
+    OperationSetpoint,
+)
 
 __all__ = [
     "ConfinedOperationPhase",
     "ConfinedOperationStateMachine",
     "ConfinedOperationSupervisor",
     "OperationSignals",
+    "OperationDirector",
+    "OperationPlan",
+    "OperationSetpoint",
     "PhaseActivation",
     "PhaseDecision",
 ]
-

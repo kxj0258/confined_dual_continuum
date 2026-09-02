@@ -1,4 +1,4 @@
-"""控制核心使用的最小几何类型。"""
+"""控制核心使用的稳定几何类型。"""
 
 from __future__ import annotations
 
@@ -29,4 +29,3 @@ class Pose:
             raise ValueError("四元数长度不能为零。")
         object.__setattr__(self, "position", position)
         object.__setattr__(self, "quaternion_wxyz", quaternion / norm)
-

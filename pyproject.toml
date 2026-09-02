@@ -9,12 +9,11 @@ description = "面向受限空间的分阶段非对称双连续体协同控制"
 requires-python = ">=3.11"
 dependencies = ["numpy>=1.26", "PyYAML>=6.0"]
 
+[project.scripts]
+cdc-run = "confined_dual_continuum.cli:main"
+
 [project.optional-dependencies]
 simulation = ["mujoco>=3.0"]
-test = ["pytest>=8.0"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
-
-[tool.pytest.ini_options]
-pythonpath = ["src"]

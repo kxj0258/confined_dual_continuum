@@ -1,4 +1,4 @@
-"""不依赖具体机器人后端的速度级最小二乘求解。"""
+"""不依赖具体机器人后端的速度级阻尼最小二乘求解。"""
 
 import numpy as np
 
@@ -17,4 +17,3 @@ def solve_velocity(
         raise ValueError("damping 不能为负。")
     lhs = matrix @ matrix.T + damping * damping * np.eye(matrix.shape[0])
     return matrix.T @ np.linalg.solve(lhs, target)
-

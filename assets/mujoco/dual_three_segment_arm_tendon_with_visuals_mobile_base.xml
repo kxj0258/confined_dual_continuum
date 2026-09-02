@@ -35,6 +35,8 @@
     <mesh name="observer_segment_3_link_2_visual_mesh" file="../meshes/dual_arm/observer/segment_3_link_2_visual.stl" scale="0.001 0.001 0.001" />
     <mesh name="observer_segment_3_link_3_visual_mesh" file="../meshes/dual_arm/observer/segment_3_link_3_visual.stl" scale="0.001 0.001 0.001" />
     <mesh name="observer_segment_3_link_4_visual_mesh" file="../meshes/dual_arm/observer/segment_3_link_4_visual.stl" scale="0.001 0.001 0.001" />
+    <mesh name="engine_visual_mesh" file="../engine/meshes/engine_visual.stl" scale="0.001 0.001 0.001" />
+    <mesh name="engine_collision_mesh" file="../engine/collision/engine_collision.stl" scale="0.001 0.001 0.001" />
   </asset>
   <default>
     <joint damping="0.1" armature="0.0001" limited="true" range="-0.261799387799 0.261799387799" stiffness="0.01" springref="0" />
@@ -42,6 +44,10 @@
     <site size="0.003" rgba="0.95 0.25 0.2 1" />
   </default>
   <worldbody>
+    <body name="engine_workspace" pos="-0.5 -2.5 -1.75" quat="1 0 0 0">
+      <geom name="engine_visual" type="mesh" mesh="engine_visual_mesh" rgba="0.66 0.68 0.71 1" contype="0" conaffinity="0" density="0" group="1" />
+      <geom name="engine_collision" type="mesh" mesh="engine_collision_mesh" rgba="0.9 0.2 0.15 0" contype="1" conaffinity="1" density="0" group="0" />
+    </body>
     <body name="mobile_base" pos="0 0 0" quat="1 0 0 0">
       <inertial pos="0 0 0" mass="1" diaginertia="0.001 0.001 0.001" />
       <freejoint name="mobile_base_freejoint" />

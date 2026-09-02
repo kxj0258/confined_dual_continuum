@@ -1,4 +1,4 @@
-"""专利样机所需的最小机器人参数模型。"""
+"""专利样机机器人参数模型。"""
 
 from __future__ import annotations
 

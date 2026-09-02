@@ -1,4 +1,4 @@
-"""三段常曲率连续体的最小运动学实现。"""
+"""三段常曲率连续体运动学。"""
 
 from __future__ import annotations
 

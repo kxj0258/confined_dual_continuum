@@ -12,18 +12,18 @@
 - bending-space compatible tendon controller；
 - typed diagnostics；
 - 三组专利消融配置；
-- 最小仿真资产集。
+- 专利实施例所需仿真资产集；
 - 三段六维常曲率 PCC 正运动学、中心线和位置雅可比；
 - 独立机器人参数加载边界；
 - `RobotBackend` 的 MuJoCo 实现，完成双臂肌腱与移动基座命令映射。
 - 将每段建模为 36.5 mm 柔性弯曲区与 3.5 mm 段末刚性偏置，零位末端与 MuJoCo 几何一致。
+- 正式统一 Demo 会话与 `cdc-run` 入口，贯通全部控制层并输出实验诊断；
+- 发动机视觉与碰撞模型纳入统一 MuJoCo 场景。
 
 ## 下一步
 
-1. 增加应用装配函数，由配置创建控制器、PCC 雅可比和 MuJoCo 后端。
-2. 完成统一 Demo runner，并贯通七个正常阶段及 SAFETY_STOP。
-3. 对照 MuJoCo 离散关节反馈校准 PCC 弯曲估计和中心线误差。
-4. 实现三组实验 runner、指标聚合和专利附图。
+1. 对照 MuJoCo 离散关节反馈校准弯曲状态下的 PCC 中心线误差。
+2. 实现三组正式消融实验、指标聚合和专利附图。
 
 ## 删除原则
 
