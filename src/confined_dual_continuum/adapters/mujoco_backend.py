@@ -98,7 +98,11 @@ class MujocoRobotBackend:
     def _read_arm(self, arm: str) -> ArmState:
         tendon = self.data.ten_length[self._tendon_ids[arm]] - self._neutral[arm]
         bending = self._bending_model.estimate(tendon)
-        local = forward_kinematics(bending, self.robot.segment_lengths_m)
+        local = forward_kinematics(
+            bending,
+            self.robot.flexure_lengths_m,
+            self.robot.distal_offsets_m,
+        )
         centerline = transform_points(
             self._site_transform(f"{arm}_base_site"), local.centerline
         )

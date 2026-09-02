@@ -1,4 +1,6 @@
-segment_lengths_m: [0.0365, 0.0365, 0.0365]
+# 每段由可弯曲柔性体和段末刚性连接区组成。
+flexure_lengths_m: [0.0365, 0.0365, 0.0365]
+distal_offsets_m: [0.0035, 0.0035, 0.0035]
 tendon_routes:
   - {angle_deg: 60, radial_offset_m: 0.005, path_segment_indices: [0]}
   - {angle_deg: 180, radial_offset_m: 0.005, path_segment_indices: [0]}
@@ -14,4 +16,3 @@ limits:
   maximum_m: 0.020
   maximum_rate_mps: 0.050
   maximum_lead_m: 0.0005
-

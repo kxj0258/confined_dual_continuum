@@ -45,7 +45,8 @@ def constant_curvature_transform(bending: np.ndarray, length_m: float) -> np.nda
 
 def forward_kinematics(
     bending: np.ndarray,
-    segment_lengths_m: tuple[float, ...],
+    flexure_lengths_m: tuple[float, ...],
+    distal_offsets_m: tuple[float, ...],
     *,
     samples_per_segment: int = 8,
 ) -> PCCResult:
@@ -53,10 +54,16 @@ def forward_kinematics(
 
     if samples_per_segment < 2:
         raise ValueError("samples_per_segment 至少为 2。")
-    values = _vector(bending, 2 * len(segment_lengths_m), "bending")
+    if len(distal_offsets_m) != len(flexure_lengths_m):
+        raise ValueError("柔性段长度与段末偏置数量必须一致。")
+    if any(offset < 0.0 for offset in distal_offsets_m):
+        raise ValueError("段末偏置不能为负。")
+    values = _vector(bending, 2 * len(flexure_lengths_m), "bending")
     current = np.eye(4)
     points: list[np.ndarray] = []
-    for index, length in enumerate(segment_lengths_m):
+    for index, (length, distal_offset) in enumerate(
+        zip(flexure_lengths_m, distal_offsets_m, strict=True)
+    ):
         segment_bending = values[2 * index : 2 * index + 2]
         for sample_index, partial_length in enumerate(
             np.linspace(0.0, float(length), samples_per_segment)
@@ -66,26 +73,37 @@ def forward_kinematics(
             local = constant_curvature_transform(segment_bending, float(partial_length))
             points.append((current @ local)[:3, 3].copy())
         current = current @ constant_curvature_transform(segment_bending, float(length))
+        if distal_offset > 0.0:
+            # 刚性连接区保持上一段末端朝向，不参与曲率积分。
+            distal_tip = current[:3, 3] + current[:3, 2] * float(distal_offset)
+            points.append(distal_tip.copy())
+            current = current.copy()
+            current[:3, 3] = distal_tip
     return PCCResult(current, np.asarray(points))
 
 
 def position_jacobian(
     bending: np.ndarray,
-    segment_lengths_m: tuple[float, ...],
+    flexure_lengths_m: tuple[float, ...],
+    distal_offsets_m: tuple[float, ...],
     *,
     step: float = 1.0e-5,
 ) -> np.ndarray:
     """用中心差分计算末端位置对六维弯曲坐标的雅可比。"""
 
-    values = _vector(bending, 2 * len(segment_lengths_m), "bending")
+    values = _vector(bending, 2 * len(flexure_lengths_m), "bending")
     if step <= 0.0:
         raise ValueError("step 必须为正。")
     jacobian = np.zeros((3, values.size))
     for index in range(values.size):
         offset = np.zeros_like(values)
         offset[index] = step
-        plus = forward_kinematics(values + offset, segment_lengths_m).tip_transform[:3, 3]
-        minus = forward_kinematics(values - offset, segment_lengths_m).tip_transform[:3, 3]
+        plus = forward_kinematics(
+            values + offset, flexure_lengths_m, distal_offsets_m
+        ).tip_transform[:3, 3]
+        minus = forward_kinematics(
+            values - offset, flexure_lengths_m, distal_offsets_m
+        ).tip_transform[:3, 3]
         jacobian[:, index] = (plus - minus) / (2.0 * step)
     return jacobian
 

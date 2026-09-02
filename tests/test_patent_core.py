@@ -41,5 +41,9 @@ def test_tendon_output_remains_compatible_after_limiting() -> None:
 
 
 def test_straight_pcc_arm_has_expected_length() -> None:
-    result = forward_kinematics(np.zeros(6), (0.0365, 0.0365, 0.0365))
-    np.testing.assert_allclose(result.tip_transform[:3, 3], [0.0, 0.0, 0.1095])
+    result = forward_kinematics(
+        np.zeros(6),
+        (0.0365, 0.0365, 0.0365),
+        (0.0035, 0.0035, 0.0035),
+    )
+    np.testing.assert_allclose(result.tip_transform[:3, 3], [0.0, 0.0, 0.12])
