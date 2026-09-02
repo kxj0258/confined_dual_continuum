@@ -7,7 +7,7 @@ import numpy as np
 from confined_dual_continuum.domain.state import RobotState
 from confined_dual_continuum.task.confined_operation import OperationSignals
 from confined_dual_continuum.task.phase_machine import ConfinedOperationPhase
-from confined_dual_continuum.workspace.model import ConfinedWorkspace
+from confined_dual_continuum.workspace.model import ConfinedWorkspace, TaskPath
 
 
 @dataclass(frozen=True)
@@ -15,8 +15,9 @@ class OperationPlan:
     position_tolerance_m: float
     base_gain: float
     maximum_base_speed_mps: float
-    local_operation_duration_s: float
-    bending_tolerance_inv_m: float
+    waypoint_duration_s: float
+    wiping_force_n: float
+    observer_offset_m: float
     straight_executor_tip_offset_m: np.ndarray
 
     def __post_init__(self) -> None:
@@ -24,8 +25,9 @@ class OperationPlan:
             self.position_tolerance_m,
             self.base_gain,
             self.maximum_base_speed_mps,
-            self.local_operation_duration_s,
-            self.bending_tolerance_inv_m,
+            self.waypoint_duration_s,
+            self.wiping_force_n,
+            self.observer_offset_m,
         )
         if any(value <= 0.0 for value in values):
             raise ValueError("任务规划参数必须全部为正。")
@@ -39,10 +41,11 @@ class OperationPlan:
 class OperationSetpoint:
     signals: OperationSignals
     executor_target_world: np.ndarray
-    task_point_world: np.ndarray
+    observer_target_world: np.ndarray
     surface_normal_world: np.ndarray
-    surface_tangent_world: np.ndarray
     base_twist_world: np.ndarray
+    executor_force_target_n: float
+    avoidance_arm: str
 
 
 class OperationDirector:
@@ -51,7 +54,6 @@ class OperationDirector:
     def __init__(self, workspace: ConfinedWorkspace, plan: OperationPlan) -> None:
         self.workspace = workspace
         self.plan = plan
-        self._initial_base_position: np.ndarray | None = None
 
     def setpoint(
         self,
@@ -60,73 +62,107 @@ class OperationDirector:
         state: RobotState,
         dt: float,
     ) -> OperationSetpoint:
-        if self._initial_base_position is None:
-            self._initial_base_position = state.base_pose.position.copy()
-        entry = self.workspace.entry.center_world
-        surface = self.workspace.contact_surface
-        task = (
-            surface.point_world
-            if surface is not None
-            else self.workspace.task_region.center_world
-        )
         tip_offset = self.plan.straight_executor_tip_offset_m
-        staging_base = entry - tip_offset
-        insertion_base = task - tip_offset
-        target = task if phase in {
-            ConfinedOperationPhase.COOPERATIVE_INSERTION,
-            ConfinedOperationPhase.BASE_LOCK,
-            ConfinedOperationPhase.LOCAL_OPERATION,
-        } else entry
-        if phase == ConfinedOperationPhase.RETREAT:
-            # 退回时机械臂先保持相对基座的直线构型，随基座整体退出。
-            target = state.base_pose.position + tip_offset
-        insertion_phases = {
-            ConfinedOperationPhase.COOPERATIVE_INSERTION,
-            ConfinedOperationPhase.BASE_LOCK,
-            ConfinedOperationPhase.LOCAL_OPERATION,
-        }
-        if phase == ConfinedOperationPhase.RETREAT:
-            base_target = self._initial_base_position
-        elif phase in insertion_phases:
-            base_target = insertion_base
-        else:
-            base_target = staging_base
+        base_target = self._base_target(phase)
         base_twist = np.zeros(6)
         if phase in {
             ConfinedOperationPhase.BASE_APPROACH,
-            ConfinedOperationPhase.COOPERATIVE_INSERTION,
-            ConfinedOperationPhase.RETREAT,
+            ConfinedOperationPhase.CURVED_SURFACE_TRANSIT,
+            ConfinedOperationPhase.WIPING_TRANSIT,
+            ConfinedOperationPhase.OBSTACLE_TRANSIT,
         }:
             base_twist[:3] = self._limited_base_velocity(
                 base_target - state.base_pose.position
             )
-        tolerance = self.plan.position_tolerance_m
-        signals = OperationSignals(
-            initialized=phase == ConfinedOperationPhase.INITIALIZE,
-            base_at_entry=np.linalg.norm(state.base_pose.position - staging_base) <= tolerance,
-            insertion_complete=np.linalg.norm(state.executor.tip_pose.position - task) <= tolerance,
-            base_locked=phase == ConfinedOperationPhase.BASE_LOCK and phase_step >= 1,
-            local_operation_complete=(
-                phase == ConfinedOperationPhase.LOCAL_OPERATION
-                and phase_step * dt >= self.plan.local_operation_duration_s
-            ),
-            retreat_complete=(
-                phase == ConfinedOperationPhase.RETREAT
-                and np.linalg.norm(state.executor.bending)
-                <= self.plan.bending_tolerance_inv_m
-                and np.linalg.norm(
-                    state.base_pose.position - self._initial_base_position
+        path = self._active_path(phase)
+        path_complete = False
+        if path is None:
+            executor_target = state.base_pose.position + tip_offset
+            observer_target = state.base_pose.position + np.array([0.0, -0.01, 0.14])
+            normal = np.array([0.0, 0.0, 1.0])
+        else:
+            waypoint = min(
+                int(phase_step * dt / self.plan.waypoint_duration_s),
+                path.points_world.shape[0] - 1,
+            )
+            path_complete = (
+                phase_step * dt
+                >= path.points_world.shape[0] * self.plan.waypoint_duration_s
+            )
+            normal = path.normal_world
+            if phase in {
+                ConfinedOperationPhase.CONFINED_VISUAL_INSPECTION,
+                ConfinedOperationPhase.CURVED_SURFACE_INSPECTION,
+            }:
+                observer_target = path.points_world[waypoint]
+                executor_target = state.base_pose.position + np.array([0.025, 0.01, 0.12])
+            else:
+                executor_target = path.points_world[waypoint]
+                observer_target = (
+                    executor_target
+                    + self.plan.observer_offset_m * normal
+                    + np.array([0.0, -0.02, 0.0])
                 )
-                <= tolerance
-            ),
+        transit_phases = {
+            ConfinedOperationPhase.BASE_APPROACH,
+            ConfinedOperationPhase.CURVED_SURFACE_TRANSIT,
+            ConfinedOperationPhase.WIPING_TRANSIT,
+            ConfinedOperationPhase.OBSTACLE_TRANSIT,
+        }
+        if phase == ConfinedOperationPhase.INITIALIZE:
+            phase_complete = True
+        elif phase == ConfinedOperationPhase.BASE_LOCK:
+            phase_complete = phase_step >= 1
+        elif phase in transit_phases:
+            phase_complete = (
+                np.linalg.norm(state.base_pose.position - base_target)
+                <= self.plan.position_tolerance_m
+            )
+        else:
+            phase_complete = path is not None and path_complete
+        signals = OperationSignals(
+            phase_complete=phase_complete,
+            completion_reason=f"{phase.value}_complete" if phase_complete else "",
         )
-        normal = (
-            surface.normal_world
-            if surface is not None
-            else self.workspace.entry.inward_direction_world
+        force_target = (
+            self.plan.wiping_force_n
+            if phase == ConfinedOperationPhase.FORCE_POSITION_WIPING
+            else 0.0
         )
-        tangent = _orthogonal_tangent(normal)
-        return OperationSetpoint(signals, target, task, normal, tangent, base_twist)
+        avoidance_arm = (
+            "executor"
+            if phase in {
+                ConfinedOperationPhase.CONFINED_VISUAL_INSPECTION,
+                ConfinedOperationPhase.CURVED_SURFACE_INSPECTION,
+            }
+            else "observer"
+        )
+        return OperationSetpoint(
+            signals,
+            executor_target,
+            observer_target,
+            normal,
+            base_twist,
+            force_target,
+            avoidance_arm,
+        )
+
+    def _base_target(self, phase: ConfinedOperationPhase) -> np.ndarray:
+        if phase == ConfinedOperationPhase.CURVED_SURFACE_TRANSIT:
+            return self.workspace.curved_base_world
+        if phase == ConfinedOperationPhase.WIPING_TRANSIT:
+            return self.workspace.wiping_base_world
+        if phase == ConfinedOperationPhase.OBSTACLE_TRANSIT:
+            return self.workspace.obstacle_base_world
+        return self.workspace.entry_base_world
+
+    def _active_path(self, phase: ConfinedOperationPhase) -> TaskPath | None:
+        return {
+            ConfinedOperationPhase.CONFINED_VISUAL_INSPECTION: self.workspace.confined_inspection,
+            ConfinedOperationPhase.CURVED_SURFACE_INSPECTION: self.workspace.curved_inspection,
+            ConfinedOperationPhase.FORCE_POSITION_WIPING: self.workspace.wiping,
+            ConfinedOperationPhase.ASYMMETRIC_OBSTACLE_OPERATION: self.workspace.obstacle_operation,
+        }.get(phase)
 
     def _limited_base_velocity(self, error: np.ndarray) -> np.ndarray:
         velocity = self.plan.base_gain * error
@@ -134,11 +170,3 @@ class OperationDirector:
         if speed > self.plan.maximum_base_speed_mps:
             velocity *= self.plan.maximum_base_speed_mps / speed
         return velocity
-
-
-def _orthogonal_tangent(normal: np.ndarray) -> np.ndarray:
-    reference = np.array([0.0, 0.0, 1.0])
-    if abs(float(np.dot(reference, normal))) > 0.9:
-        reference = np.array([1.0, 0.0, 0.0])
-    tangent = np.cross(normal, reference)
-    return tangent / np.linalg.norm(tangent)

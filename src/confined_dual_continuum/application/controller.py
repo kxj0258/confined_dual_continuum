@@ -11,7 +11,6 @@ from confined_dual_continuum.coordination.dual_arm_coordinator import (
     CoordinationTargets,
     DualArmCoordinator,
 )
-from confined_dual_continuum.coordination.observer_target import ObserverTargetGenerator
 from confined_dual_continuum.diagnostics.records import ControlDiagnostics
 from confined_dual_continuum.domain.state import ArmCommand, RobotCommand, RobotState
 from confined_dual_continuum.kinematics.pcc import position_jacobian
@@ -28,9 +27,10 @@ class ControlInput:
     state: RobotState
     signals: OperationSignals
     executor_target_world: np.ndarray
-    task_point_world: np.ndarray
+    observer_target_world: np.ndarray
     surface_normal_world: np.ndarray
-    surface_tangent_world: np.ndarray
+    executor_force_target_n: float
+    avoidance_arm: str
     requested_base_twist_world: np.ndarray
     dt: float
 
@@ -47,10 +47,8 @@ class ConfinedDualContinuumController:
         executor_actuation: CompatibleTendonController,
         observer_actuation: CompatibleTendonController,
         robot: RobotModel,
-        observer_target: ObserverTargetGenerator,
     ) -> None:
         self.supervisor = ConfinedOperationSupervisor()
-        self.observer_target = observer_target
         self.coordinator = DualArmCoordinator()
         self.executor_actuation = executor_actuation
         self.observer_actuation = observer_actuation
@@ -76,12 +74,6 @@ class ConfinedDualContinuumController:
             else request.signals
         )
         phase = self.supervisor.update(signals)
-        observer_target = self.observer_target.generate(
-            request.task_point_world,
-            request.surface_normal_world,
-            request.surface_tangent_world,
-            request.dt,
-        )
         rotation = _quaternion_rotation(request.state.base_pose.quaternion_wxyz)
         executor_jacobian = rotation @ position_jacobian(
             request.state.executor.bending,
@@ -94,16 +86,19 @@ class ConfinedDualContinuumController:
             self.robot.distal_offsets_m,
         )
         bending_command = self.coordinator.solve(
-            request.state,
-            CoordinationTargets(
+            state=request.state,
+            targets=CoordinationTargets(
                 executor_position_world=request.executor_target_world,
-                observer_position_world=observer_target.position_world,
+                observer_position_world=request.observer_target_world,
+                surface_normal_world=request.surface_normal_world,
+                executor_force_target_n=request.executor_force_target_n,
             ),
-            phase.activation,
-            executor_jacobian,
-            observer_jacobian,
-            request.requested_base_twist_world,
-            safety,
+            activation=phase.activation,
+            executor_jacobian=executor_jacobian,
+            observer_jacobian=observer_jacobian,
+            base_twist_world=request.requested_base_twist_world,
+            safety=safety,
+            avoidance_arm=request.avoidance_arm,
         )
         executor = self.executor_actuation.step(
             bending_command.executor.bending_rate,
@@ -134,6 +129,10 @@ class ConfinedDualContinuumController:
                 observer_compatibility_residual=observer.compatibility_residual_norm,
                 inter_arm_avoidance_active=safety.avoidance_active,
                 safety_stop=safety.safety_stop,
+                executor_contact_force_n=float(
+                    np.linalg.norm(request.state.executor.contact_force_world)
+                ),
+                avoidance_arm=request.avoidance_arm,
             ),
         )
 

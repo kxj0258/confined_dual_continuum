@@ -19,6 +19,7 @@ class RunSummary:
     duration_s: float
     minimum_inter_arm_distance_m: float
     maximum_compatibility_residual: float
+    maximum_executor_contact_force_n: float
 
 
 class DiagnosticsRecorder:
@@ -59,6 +60,10 @@ class DiagnosticsRecorder:
             duration_s=len(self._rows) * dt,
             minimum_inter_arm_distance_m=min(distances, default=float("inf")),
             maximum_compatibility_residual=max(residuals, default=0.0),
+            maximum_executor_contact_force_n=max(
+                (float(row["executor_contact_force_n"]) for row in self._rows),
+                default=0.0,
+            ),
         )
 
     def save(self, output_directory: str | Path, summary: RunSummary) -> None:

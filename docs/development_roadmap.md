@@ -7,7 +7,7 @@
 - 通用受限空间模型及配置加载边界；
 - 统一阶段监督器；
 - Executor/Observer 独立控制器；
-- Observer task-assist 目标生成；
+- 阶段相关 Executor/Observer 主从角色分配；
 - 双臂距离安全监督；
 - bending-space compatible tendon controller；
 - typed diagnostics；
@@ -18,8 +18,9 @@
 - `RobotBackend` 的 MuJoCo 实现，完成双臂肌腱与移动基座命令映射。
 - 将每段建模为 36.5 mm 柔性弯曲区与 3.5 mm 段末刚性偏置，零位末端与 MuJoCo 几何一致。
 - 正式统一 Demo 会话与 `cdc-run` 入口，贯通全部控制层并输出实验诊断；
-- 与 120 mm 双连续体匹配的缩比弯曲腔体主场景；
-- 55 mm 有限入口、内部偏置挡板、接触任务面与实体碰撞内壁。
+- 与 120 mm 双连续体匹配的四工位多任务验证台；
+- 基座外置有限空间探查、曲面巡检、力位擦拭和非对称障碍操作；
+- Observer 末端 RGB 视频、Executor 末端力反馈和实体碰撞环境。
 
 ## 下一步
 

@@ -15,11 +15,13 @@ class ArmState:
     bending: np.ndarray
     tendon_displacement_m: np.ndarray
     centerline_world: np.ndarray
+    contact_force_world: np.ndarray
 
     def __post_init__(self) -> None:
         bending = np.asarray(self.bending, dtype=float)
         tendon = np.asarray(self.tendon_displacement_m, dtype=float)
         centerline = np.asarray(self.centerline_world, dtype=float)
+        force = vector(self.contact_force_world, 3, "contact_force_world")
         if bending.ndim != 1 or tendon.ndim != 1:
             raise ValueError("bending 和 tendon_displacement_m 必须是一维向量。")
         if centerline.ndim != 2 or centerline.shape[1] != 3:
@@ -29,6 +31,7 @@ class ArmState:
         object.__setattr__(self, "bending", bending.copy())
         object.__setattr__(self, "tendon_displacement_m", tendon.copy())
         object.__setattr__(self, "centerline_world", centerline.copy())
+        object.__setattr__(self, "contact_force_world", force)
 
 
 @dataclass(frozen=True)
@@ -64,4 +67,3 @@ class RobotCommand:
             "base_twist_world",
             vector(self.base_twist_world, 6, "base_twist_world"),
         )
-

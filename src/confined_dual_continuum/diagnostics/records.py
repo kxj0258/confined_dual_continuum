@@ -16,6 +16,8 @@ class ControlDiagnostics:
     observer_compatibility_residual: float
     inter_arm_avoidance_active: bool
     safety_stop: bool
+    executor_contact_force_n: float
+    avoidance_arm: str
 
     def as_dict(self) -> dict[str, object]:
         # 字典化仅发生在记录边界，控制层内部不依赖字符串键通信。

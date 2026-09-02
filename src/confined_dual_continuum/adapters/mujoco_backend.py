@@ -60,6 +60,10 @@ class MujocoRobotBackend:
             for arm in ("executor", "observer")
         }
         self._pending: RobotCommand | None = None
+        self._executor_force_sensor = self._id(
+            self._mj.mjtObj.mjOBJ_SENSOR, "sensor_executor_tip_force"
+        )
+        self._renderer = None
         self._mj.mj_forward(self.model, self.data)
         self._neutral = {
             arm: self.data.ten_length[indices].copy()
@@ -111,7 +115,28 @@ class MujocoRobotBackend:
             bending=bending,
             tendon_displacement_m=tendon,
             centerline_world=centerline,
+            contact_force_world=self._contact_force_world(arm),
         )
+
+    def capture_observer_frame(self, width: int, height: int) -> np.ndarray:
+        """渲染 Observer 末端摄像头的 RGB 图像。"""
+
+        if self._renderer is None:
+            self._renderer = self._mj.Renderer(
+                self.model,
+                height=height,
+                width=width,
+            )
+        self._renderer.update_scene(self.data, camera="observer_camera")
+        return self._renderer.render().copy()
+
+    def _contact_force_world(self, arm: str) -> np.ndarray:
+        if arm != "executor":
+            return np.zeros(3)
+        address = int(self.model.sensor_adr[self._executor_force_sensor])
+        local_force = np.asarray(self.data.sensordata[address : address + 3], dtype=float)
+        rotation = self.data.site_xmat[self._site_ids["executor_tip"]].reshape(3, 3)
+        return rotation @ local_force
 
     def _integrate_command(self, command: RobotCommand, dt: float) -> None:
         for arm, arm_command in (

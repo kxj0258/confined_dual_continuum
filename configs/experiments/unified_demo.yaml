@@ -1,7 +1,7 @@
 name: confined_dual_operation
 robot_config: ../robot/three_segment_nine_tendon.yaml
-workspace_config: ../workspace/scaled_confined_chamber.yaml
-mujoco_xml: ../../assets/mujoco/scaled_confined_chamber_dual_continuum.xml
+workspace_config: ../workspace/multi_task_patent_bench.yaml
+mujoco_xml: ../../assets/mujoco/multi_task_patent_demo.xml
 output_directory: ../../outputs/confined_dual_operation
 
 runtime:
@@ -9,20 +9,22 @@ runtime:
   maximum_duration_s: 180.0
 
 viewer:
-  look_at_world_m: [0.0, 0.0, 0.24]
-  distance_m: 0.42
+  look_at_world_m: [0.03, 0.0, 0.14]
+  distance_m: 0.85
   azimuth_deg: 135.0
   elevation_deg: -20.0
+
+video:
+  width: 640
+  height: 480
+  fps: 30
+  filename: observer_inspection.mp4
 
 task:
   position_tolerance_m: 0.005
   base_gain: 1.5
   maximum_base_speed_mps: 0.10
-  local_operation_duration_s: 5.0
-  bending_tolerance_inv_m: 0.1
+  waypoint_duration_s: 2.0
+  wiping_force_n: 1.0
+  observer_offset_m: 0.060
   straight_executor_tip_offset_m: [0.0, 0.01, 0.14]
-
-observer:
-  normal_offset_m: 0.060
-  tangential_offset_m: 0.020
-  maximum_target_speed_mps: 0.025

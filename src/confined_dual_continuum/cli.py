@@ -17,10 +17,6 @@ from confined_dual_continuum.actuation.compatible_tendon_control import (
 from confined_dual_continuum.adapters.mujoco_backend import MujocoRobotBackend
 from confined_dual_continuum.application.controller import ConfinedDualContinuumController
 from confined_dual_continuum.application.session import OperationSession, SessionConfig
-from confined_dual_continuum.coordination.observer_target import (
-    ObserverTargetConfig,
-    ObserverTargetGenerator,
-)
 from confined_dual_continuum.robot.model import load_robot_model
 from confined_dual_continuum.task.operation_director import (
     OperationDirector,
@@ -42,18 +38,10 @@ def main() -> None:
     robot = load_robot_model((root / values["robot_config"]).resolve())
     workspace = load_workspace((root / values["workspace_config"]).resolve())
     backend = MujocoRobotBackend((root / values["mujoco_xml"]).resolve(), robot)
-    observer = values["observer"]
     controller = ConfinedDualContinuumController(
         CompatibleTendonController(robot.bending_model, robot.limits),
         CompatibleTendonController(robot.bending_model, robot.limits),
         robot,
-        ObserverTargetGenerator(
-            ObserverTargetConfig(
-                normal_offset_m=float(observer["normal_offset_m"]),
-                tangential_offset_m=float(observer["tangential_offset_m"]),
-                max_target_speed_mps=float(observer["maximum_target_speed_mps"]),
-            )
-        ),
     )
     task = values["task"]
     director = OperationDirector(
@@ -62,8 +50,9 @@ def main() -> None:
             position_tolerance_m=float(task["position_tolerance_m"]),
             base_gain=float(task["base_gain"]),
             maximum_base_speed_mps=float(task["maximum_base_speed_mps"]),
-            local_operation_duration_s=float(task["local_operation_duration_s"]),
-            bending_tolerance_inv_m=float(task["bending_tolerance_inv_m"]),
+            waypoint_duration_s=float(task["waypoint_duration_s"]),
+            wiping_force_n=float(task["wiping_force_n"]),
+            observer_offset_m=float(task["observer_offset_m"]),
             straight_executor_tip_offset_m=task["straight_executor_tip_offset_m"],
         ),
     )
@@ -85,6 +74,7 @@ def main() -> None:
         str(output),
         arguments.viewer,
         values["viewer"],
+        values["video"],
         float(runtime["control_period_s"]),
     )
     print(json.dumps(asdict(summary), ensure_ascii=False, indent=2))
@@ -96,32 +86,60 @@ def _run(
     output: str,
     viewer_enabled: bool,
     viewer_config: dict[str, object],
+    video_config: dict[str, object],
     control_period_s: float,
 ):
+    import imageio.v2 as imageio
+
+    video_path = Path(output) / str(video_config["filename"])
+    writer = imageio.get_writer(video_path, fps=int(video_config["fps"]))
+    capture_interval = max(
+        1,
+        round(1.0 / (int(video_config["fps"]) * control_period_s)),
+    )
+    step = 0
+
+    def capture_frame() -> None:
+        nonlocal step
+        if step % capture_interval == 0:
+            writer.append_data(backend.capture_observer_frame(
+                int(video_config["width"]),
+                int(video_config["height"]),
+            ))
+        step += 1
+
     if not viewer_enabled:
-        return session.run(output)
+        try:
+            return session.run(output, on_step=lambda _state: capture_frame())
+        finally:
+            writer.close()
+
     import mujoco.viewer
 
-    with mujoco.viewer.launch_passive(backend.model, backend.data) as viewer:
-        with viewer.lock():
-            viewer.cam.lookat[:] = viewer_config["look_at_world_m"]
-            viewer.cam.distance = float(viewer_config["distance_m"])
-            viewer.cam.azimuth = float(viewer_config["azimuth_deg"])
-            viewer.cam.elevation = float(viewer_config["elevation_deg"])
-        next_frame_time = time.perf_counter()
+    try:
+        with mujoco.viewer.launch_passive(backend.model, backend.data) as viewer:
+            with viewer.lock():
+                viewer.cam.lookat[:] = viewer_config["look_at_world_m"]
+                viewer.cam.distance = float(viewer_config["distance_m"])
+                viewer.cam.azimuth = float(viewer_config["azimuth_deg"])
+                viewer.cam.elevation = float(viewer_config["elevation_deg"])
+            next_frame_time = time.perf_counter()
 
-        def refresh(_state) -> bool:
-            nonlocal next_frame_time
-            if not viewer.is_running():
-                return False
-            viewer.sync()
-            next_frame_time += control_period_s
-            delay = next_frame_time - time.perf_counter()
-            if delay > 0.0:
-                time.sleep(delay)
-            return True
+            def refresh(_state) -> bool:
+                nonlocal next_frame_time
+                if not viewer.is_running():
+                    return False
+                capture_frame()
+                viewer.sync()
+                next_frame_time += control_period_s
+                delay = next_frame_time - time.perf_counter()
+                if delay > 0.0:
+                    time.sleep(delay)
+                return True
 
-        return session.run(output, on_step=refresh)
+            return session.run(output, on_step=refresh)
+    finally:
+        writer.close()
 
 
 if __name__ == "__main__":

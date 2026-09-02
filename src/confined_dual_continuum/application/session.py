@@ -57,9 +57,10 @@ class OperationSession:
                 state=state,
                 signals=setpoint.signals,
                 executor_target_world=setpoint.executor_target_world,
-                task_point_world=setpoint.task_point_world,
+                observer_target_world=setpoint.observer_target_world,
                 surface_normal_world=setpoint.surface_normal_world,
-                surface_tangent_world=setpoint.surface_tangent_world,
+                executor_force_target_n=setpoint.executor_force_target_n,
+                avoidance_arm=setpoint.avoidance_arm,
                 requested_base_twist_world=setpoint.base_twist_world,
                 dt=self.config.control_period_s,
             ))

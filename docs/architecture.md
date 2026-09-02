@@ -36,7 +36,8 @@ cli
 WorkspaceSnapshot + OperationProgress
 → ConfinedOperationSupervisor
 → PhaseDecision
-→ ExecutorController / ObserverTargetGenerator / ObserverController
+→ OperationDirector
+→ ExecutorController / ObserverController / InterArmSafety
 → DualArmCoordinator
 → CompatibleTendonController
 → RobotCommand

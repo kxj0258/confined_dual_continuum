@@ -1,4 +1,4 @@
-<mujoco model="scaled_confined_chamber_dual_continuum">
+<mujoco model="multi_task_patent_demo">
   <compiler angle="radian" />
   <option timestep="0.001" integrator="implicitfast" iterations="50" gravity="0 0 0" />
   <visual>
@@ -44,22 +44,34 @@
   <worldbody>
     <geom name="reference_floor" type="plane" pos="0 0 -0.005" size="0.45 0.45 0.01" rgba="0.12 0.14 0.18 1" contype="0" conaffinity="0" />
     <light name="scene_light" pos="-0.25 -0.25 0.55" dir="0.4 0.4 -1" diffuse="0.9 0.9 0.9" />
-    <body name="scaled_confined_chamber">
-      <!-- 140×100×180 mm 内腔；半透明壁兼作简单稳定的碰撞几何。 -->
-      <geom name="chamber_left" type="box" pos="-0.075 0 0.27" size="0.005 0.055 0.09" rgba="0.25 0.65 0.85 0.22" contype="1" conaffinity="1" density="0" />
-      <geom name="chamber_right" type="box" pos="0.075 0 0.27" size="0.005 0.055 0.09" rgba="0.25 0.65 0.85 0.22" contype="1" conaffinity="1" density="0" />
-      <geom name="chamber_bottom" type="box" pos="0 -0.055 0.27" size="0.075 0.005 0.09" rgba="0.25 0.65 0.85 0.22" contype="1" conaffinity="1" density="0" />
-      <geom name="chamber_top" type="box" pos="0 0.055 0.27" size="0.075 0.005 0.09" rgba="0.25 0.65 0.85 0.22" contype="1" conaffinity="1" density="0" />
-      <geom name="chamber_back" type="box" pos="0 0 0.365" size="0.075 0.055 0.005" rgba="0.95 0.55 0.18 0.40" contype="1" conaffinity="1" density="0" />
-      <!-- 四块前壁形成 55×55 mm 方形入口。 -->
-      <geom name="entry_left" type="box" pos="-0.05375 0 0.18" size="0.02625 0.055 0.005" rgba="0.25 0.65 0.85 0.30" contype="1" conaffinity="1" density="0" />
-      <geom name="entry_right" type="box" pos="0.05375 0 0.18" size="0.02625 0.055 0.005" rgba="0.25 0.65 0.85 0.30" contype="1" conaffinity="1" density="0" />
-      <geom name="entry_bottom" type="box" pos="0 -0.04125 0.18" size="0.0275 0.01375 0.005" rgba="0.25 0.65 0.85 0.30" contype="1" conaffinity="1" density="0" />
-      <geom name="entry_top" type="box" pos="0 0.04125 0.18" size="0.0275 0.01375 0.005" rgba="0.25 0.65 0.85 0.30" contype="1" conaffinity="1" density="0" />
-      <!-- 偏置挡板迫使双臂在腔内形成非直线协同构型。 -->
-      <geom name="bending_baffle" type="box" pos="0.035 0 0.275" size="0.020 0.035 0.015" rgba="0.82 0.24 0.18 0.65" contype="1" conaffinity="1" density="0" />
-      <site name="chamber_entry" type="sphere" pos="0 0 0.18" size="0.004" rgba="0.1 0.8 1 0.8" />
-      <site name="operation_target" type="sphere" pos="-0.025 0.01 0.355" size="0.005" rgba="1 0.75 0.1 1" />
+    <body name="multi_task_patent_bench">
+      <!-- 工位一：基座留在外部，只有双连续体穿过 52 mm 探查入口。 -->
+      <geom name="inspection_shell" type="box" pos="-0.24 0 0.225" size="0.055 0.050 0.055" rgba="0.20 0.60 0.85 0.16" contype="0" conaffinity="0" />
+      <geom name="inspection_entry_left" type="box" pos="-0.282 0 0.17" size="0.016 0.050 0.005" rgba="0.20 0.60 0.85 0.45" contype="1" conaffinity="1" />
+      <geom name="inspection_entry_right" type="box" pos="-0.198 0 0.17" size="0.016 0.050 0.005" rgba="0.20 0.60 0.85 0.45" contype="1" conaffinity="1" />
+      <geom name="inspection_entry_front" type="box" pos="-0.24 -0.038 0.17" size="0.026 0.012 0.005" rgba="0.20 0.60 0.85 0.45" contype="1" conaffinity="1" />
+      <geom name="inspection_entry_back" type="box" pos="-0.24 0.038 0.17" size="0.026 0.012 0.005" rgba="0.20 0.60 0.85 0.45" contype="1" conaffinity="1" />
+      <site name="inspection_marker_1" pos="-0.255 -0.010 0.205" size="0.004" rgba="1 0.2 0.1 1" />
+      <site name="inspection_marker_2" pos="-0.225 -0.010 0.225" size="0.004" rgba="1 0.8 0.1 1" />
+      <site name="inspection_marker_3" pos="-0.250 -0.010 0.245" size="0.004" rgba="0.2 1 0.3 1" />
+
+      <!-- 工位二：五段薄板形成离散曲面和缺陷标记。 -->
+      <geom name="curve_1" type="box" pos="-0.105 0 0.132" size="0.018 0.050 0.004" euler="0 0.45 0" rgba="0.65 0.68 0.72 1" contype="1" conaffinity="1" />
+      <geom name="curve_2" type="box" pos="-0.070 0 0.145" size="0.018 0.050 0.004" rgba="0.65 0.68 0.72 1" contype="1" conaffinity="1" />
+      <geom name="curve_3" type="box" pos="-0.035 0 0.132" size="0.018 0.050 0.004" euler="0 -0.45 0" rgba="0.65 0.68 0.72 1" contype="1" conaffinity="1" />
+      <site name="curve_defect_1" pos="-0.090 0.015 0.140" size="0.004" rgba="1 0.1 0.1 1" />
+      <site name="curve_defect_2" pos="-0.050 -0.015 0.138" size="0.004" rgba="1 0.5 0.1 1" />
+
+      <!-- 工位三：黑色擦拭板，黄色条带表示待清洁区域。 -->
+      <geom name="wiping_board" type="box" pos="0.12 0 0.142" size="0.055 0.045 0.005" rgba="0.04 0.05 0.06 1" contype="1" conaffinity="1" />
+      <geom name="wiping_stain_1" type="box" pos="0.12 -0.020 0.1365" size="0.045 0.004 0.0005" rgba="0.85 0.72 0.18 1" contype="0" conaffinity="0" />
+      <geom name="wiping_stain_2" type="box" pos="0.12 0 0.1365" size="0.045 0.004 0.0005" rgba="0.85 0.72 0.18 1" contype="0" conaffinity="0" />
+      <geom name="wiping_stain_3" type="box" pos="0.12 0.020 0.1365" size="0.045 0.004 0.0005" rgba="0.85 0.72 0.18 1" contype="0" conaffinity="0" />
+
+      <!-- 工位四：双立柱构成非对称避障通道。 -->
+      <geom name="obstacle_post_left" type="cylinder" pos="0.290 -0.015 0.09" size="0.014 0.065" rgba="0.80 0.20 0.18 1" contype="1" conaffinity="1" />
+      <geom name="obstacle_post_right" type="cylinder" pos="0.315 0.020 0.09" size="0.014 0.065" rgba="0.80 0.20 0.18 1" contype="1" conaffinity="1" />
+      <site name="obstacle_goal" pos="0.325 -0.005 0.120" size="0.005" rgba="0.2 1 0.3 1" />
     </body>
     <body name="mobile_base" pos="0 0 0" quat="1 0 0 0">
       <inertial pos="0 0 0" mass="1" diaginertia="0.001 0.001 0.001" />
@@ -510,6 +522,8 @@
                                   <geom name="observer_segment_3_link_4_visual" type="mesh" mesh="observer_segment_3_link_4_visual_mesh" pos="-0 0.01 -0.13" contype="0" conaffinity="0" density="0" group="1" />
                                   <site name="observer_segment_3_tip" pos="0 0 0.01" quat="1 0 0 0" />
                                   <site name="observer_tip" pos="0 0 0.01" quat="1 0 0 0" />
+                                  <!-- MuJoCo 相机默认朝局部 -Z，绕 X 轴 180° 后沿机械臂末端 +Z 观察。 -->
+                                  <camera name="observer_camera" pos="0 0 0.012" quat="0 1 0 0" fovy="70" />
                                   <site name="observer_segment_3_link_4_hole_02_in" pos="0.00433013 0.0025 0.00066987" size="0.0006" rgba="1 0.2 0.1 1" />
                                   <site name="observer_segment_3_link_4_hole_06_in" pos="-0.00433013 0.0025 0.00066987" size="0.0006" rgba="1 0.2 0.1 1" />
                                   <site name="observer_segment_3_link_4_hole_10_in" pos="0 -0.005 0.00133975" size="0.0006" rgba="1 0.2 0.1 1" />
@@ -919,6 +933,7 @@
     <position name="act_observer_tendon_9" tendon="observer_tendon_9" kp="100000" forcelimited="false" forcerange="-30 30" ctrllimited="false" />
   </actuator>
   <sensor>
+    <force name="sensor_executor_tip_force" site="executor_tip" />
     <tendonpos name="sensor_executor_tendon_1_length" tendon="executor_tendon_1" />
     <tendonvel name="sensor_executor_tendon_1_velocity" tendon="executor_tendon_1" />
     <actuatorfrc name="sensor_executor_tendon_1_actuator_force" actuator="act_executor_tendon_1" />

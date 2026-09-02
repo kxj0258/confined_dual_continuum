@@ -12,7 +12,7 @@
 
 ## 设计原则
 
-- 主实施例采用与 120 mm 双连续体匹配的缩比弯曲腔体。
+- 主实施例采用与 120 mm 双连续体匹配的四工位多任务验证台。
 - 控制核心不依赖 MuJoCo、viewer、YAML 或绘图代码。
 - Executor 与 Observer 分别求解，只在命令层合并。
 - 肌腱限幅在弯曲相容空间内完成，不逐肌腱破坏几何约束。
@@ -28,4 +28,4 @@
 cdc-run --config configs/experiments/unified_demo.yaml
 ```
 
-需要可视化时显式增加 `--viewer`。运行结果写入配置指定目录，包括完整时序和汇总指标。
+需要可视化时显式增加 `--viewer`。运行结果写入配置指定目录，包括 Observer 末端视频、完整时序、配置快照和汇总指标。四工位任务定义见 `docs/multi_task_demo.md`。

@@ -53,8 +53,42 @@ class ContactSurface:
 
 
 @dataclass(frozen=True)
+class TaskPath:
+    name: str
+    points_world: np.ndarray
+    normal_world: np.ndarray
+
+    def __post_init__(self) -> None:
+        points = np.asarray(self.points_world, dtype=float)
+        normal = vector(self.normal_world, 3, f"{self.name}.normal_world")
+        if not self.name or points.ndim != 2 or points.shape[0] < 2 or points.shape[1] != 3:
+            raise ValueError("任务路径必须具有名称和至少两个三维点。")
+        if not np.all(np.isfinite(points)) or np.linalg.norm(normal) <= 1.0e-12:
+            raise ValueError("任务路径必须包含有限坐标和非零法向。")
+        object.__setattr__(self, "points_world", points.copy())
+        object.__setattr__(self, "normal_world", normal / np.linalg.norm(normal))
+
+
+@dataclass(frozen=True)
 class ConfinedWorkspace:
     entry: WorkspaceEntry
     task_region: Region
     forbidden_regions: tuple[Region, ...] = ()
     contact_surface: ContactSurface | None = None
+    confined_inspection: TaskPath | None = None
+    curved_inspection: TaskPath | None = None
+    wiping: TaskPath | None = None
+    obstacle_operation: TaskPath | None = None
+    entry_base_world: np.ndarray = field(default_factory=lambda: np.zeros(3))
+    curved_base_world: np.ndarray = field(default_factory=lambda: np.zeros(3))
+    wiping_base_world: np.ndarray = field(default_factory=lambda: np.zeros(3))
+    obstacle_base_world: np.ndarray = field(default_factory=lambda: np.zeros(3))
+
+    def __post_init__(self) -> None:
+        for name in (
+            "entry_base_world",
+            "curved_base_world",
+            "wiping_base_world",
+            "obstacle_base_world",
+        ):
+            object.__setattr__(self, name, vector(getattr(self, name), 3, name))

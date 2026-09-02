@@ -9,10 +9,14 @@ from enum import Enum
 class ConfinedOperationPhase(str, Enum):
     INITIALIZE = "initialize"
     BASE_APPROACH = "base_approach"
-    COOPERATIVE_INSERTION = "cooperative_insertion"
     BASE_LOCK = "base_lock"
-    LOCAL_OPERATION = "local_operation"
-    RETREAT = "retreat"
+    CONFINED_VISUAL_INSPECTION = "confined_visual_inspection"
+    CURVED_SURFACE_TRANSIT = "curved_surface_transit"
+    CURVED_SURFACE_INSPECTION = "curved_surface_inspection"
+    WIPING_TRANSIT = "wiping_transit"
+    FORCE_POSITION_WIPING = "force_position_wiping"
+    OBSTACLE_TRANSIT = "obstacle_transit"
+    ASYMMETRIC_OBSTACLE_OPERATION = "asymmetric_obstacle_operation"
     COMPLETE = "complete"
     SAFETY_STOP = "safety_stop"
 
@@ -27,21 +31,29 @@ class PhaseActivation:
 ACTIVATION = {
     ConfinedOperationPhase.INITIALIZE: PhaseActivation(False, False, False),
     ConfinedOperationPhase.BASE_APPROACH: PhaseActivation(True, False, False),
-    ConfinedOperationPhase.COOPERATIVE_INSERTION: PhaseActivation(True, True, True),
     ConfinedOperationPhase.BASE_LOCK: PhaseActivation(False, False, False),
-    ConfinedOperationPhase.LOCAL_OPERATION: PhaseActivation(False, True, True),
-    ConfinedOperationPhase.RETREAT: PhaseActivation(True, True, True),
+    ConfinedOperationPhase.CONFINED_VISUAL_INSPECTION: PhaseActivation(False, True, True),
+    ConfinedOperationPhase.CURVED_SURFACE_TRANSIT: PhaseActivation(True, False, False),
+    ConfinedOperationPhase.CURVED_SURFACE_INSPECTION: PhaseActivation(False, True, True),
+    ConfinedOperationPhase.WIPING_TRANSIT: PhaseActivation(True, False, False),
+    ConfinedOperationPhase.FORCE_POSITION_WIPING: PhaseActivation(False, True, True),
+    ConfinedOperationPhase.OBSTACLE_TRANSIT: PhaseActivation(True, False, False),
+    ConfinedOperationPhase.ASYMMETRIC_OBSTACLE_OPERATION: PhaseActivation(False, True, True),
     ConfinedOperationPhase.COMPLETE: PhaseActivation(False, False, False),
     ConfinedOperationPhase.SAFETY_STOP: PhaseActivation(False, False, False),
 }
 
 NEXT_PHASE = {
     ConfinedOperationPhase.INITIALIZE: ConfinedOperationPhase.BASE_APPROACH,
-    ConfinedOperationPhase.BASE_APPROACH: ConfinedOperationPhase.COOPERATIVE_INSERTION,
-    ConfinedOperationPhase.COOPERATIVE_INSERTION: ConfinedOperationPhase.BASE_LOCK,
-    ConfinedOperationPhase.BASE_LOCK: ConfinedOperationPhase.LOCAL_OPERATION,
-    ConfinedOperationPhase.LOCAL_OPERATION: ConfinedOperationPhase.RETREAT,
-    ConfinedOperationPhase.RETREAT: ConfinedOperationPhase.COMPLETE,
+    ConfinedOperationPhase.BASE_APPROACH: ConfinedOperationPhase.BASE_LOCK,
+    ConfinedOperationPhase.BASE_LOCK: ConfinedOperationPhase.CONFINED_VISUAL_INSPECTION,
+    ConfinedOperationPhase.CONFINED_VISUAL_INSPECTION: ConfinedOperationPhase.CURVED_SURFACE_TRANSIT,
+    ConfinedOperationPhase.CURVED_SURFACE_TRANSIT: ConfinedOperationPhase.CURVED_SURFACE_INSPECTION,
+    ConfinedOperationPhase.CURVED_SURFACE_INSPECTION: ConfinedOperationPhase.WIPING_TRANSIT,
+    ConfinedOperationPhase.WIPING_TRANSIT: ConfinedOperationPhase.FORCE_POSITION_WIPING,
+    ConfinedOperationPhase.FORCE_POSITION_WIPING: ConfinedOperationPhase.OBSTACLE_TRANSIT,
+    ConfinedOperationPhase.OBSTACLE_TRANSIT: ConfinedOperationPhase.ASYMMETRIC_OBSTACLE_OPERATION,
+    ConfinedOperationPhase.ASYMMETRIC_OBSTACLE_OPERATION: ConfinedOperationPhase.COMPLETE,
 }
 
 
@@ -82,4 +94,3 @@ class ConfinedOperationStateMachine:
         self.phase = phase
         self.phase_step = 0
         self.transition_reason = reason
-
