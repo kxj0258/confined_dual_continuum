@@ -13,14 +13,16 @@
 - typed diagnostics；
 - 三组专利消融配置；
 - 最小仿真资产集。
+- 三段六维常曲率 PCC 正运动学、中心线和位置雅可比；
+- 独立机器人参数加载边界；
+- `RobotBackend` 的 MuJoCo 实现，完成双臂肌腱与移动基座命令映射。
 
 ## 下一步
 
-1. 从原项目提取解析三段九肌腱模型所需的最小配置加载器。
-2. 迁移 PCC forward kinematics、position Jacobian 和 centerline Jacobian。
-3. 实现 MuJoCo backend adapter，将新的 `RobotCommand` 映射至现有 actuator。
-4. 完成统一 Demo runner，并贯通七个正常阶段及 SAFETY_STOP。
-5. 实现三组实验 runner、指标聚合和专利附图。
+1. 增加应用装配函数，由配置创建控制器、PCC 雅可比和 MuJoCo 后端。
+2. 完成统一 Demo runner，并贯通七个正常阶段及 SAFETY_STOP。
+3. 对照 MuJoCo 离散关节反馈校准 PCC 弯曲估计和中心线误差。
+4. 实现三组实验 runner、指标聚合和专利附图。
 
 ## 删除原则
 

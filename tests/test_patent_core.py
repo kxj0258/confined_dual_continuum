@@ -8,6 +8,7 @@ from confined_dual_continuum.actuation.compatible_tendon_control import (
     TendonLimits,
 )
 from confined_dual_continuum.coordination.observer_target import ObserverTargetGenerator
+from confined_dual_continuum.kinematics.pcc import forward_kinematics
 from confined_dual_continuum.task.confined_operation import ConfinedOperationSupervisor, OperationSignals
 
 
@@ -37,3 +38,8 @@ def test_tendon_output_remains_compatible_after_limiting() -> None:
     )
     assert model.is_compatible(result.tendon_rate_mps)
     assert np.max(np.abs(result.tendon_rate_mps)) <= 0.001
+
+
+def test_straight_pcc_arm_has_expected_length() -> None:
+    result = forward_kinematics(np.zeros(6), (0.0365, 0.0365, 0.0365))
+    np.testing.assert_allclose(result.tip_transform[:3, 3], [0.0, 0.0, 0.1095])
