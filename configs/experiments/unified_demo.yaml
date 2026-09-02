@@ -8,6 +8,12 @@ runtime:
   control_period_s: 0.01
   maximum_duration_s: 180.0
 
+viewer:
+  look_at_world_m: [0.0, 0.0, 0.24]
+  distance_m: 0.42
+  azimuth_deg: 135.0
+  elevation_deg: -20.0
+
 task:
   position_tolerance_m: 0.005
   base_gain: 1.5

@@ -41,7 +41,7 @@ class OperationSession:
     def run(
         self,
         output_directory: str,
-        on_step: Callable[[RobotState], None] | None = None,
+        on_step: Callable[[RobotState], bool | None] | None = None,
     ) -> RunSummary:
         state = self.backend.reset()
         recorder = DiagnosticsRecorder()
@@ -67,8 +67,8 @@ class OperationSession:
             self.backend.step(self.config.control_period_s)
             state = self.backend.read_state()
             recorder.append((step + 1) * self.config.control_period_s, output.diagnostics, state)
-            if on_step is not None:
-                on_step(state)
+            if on_step is not None and on_step(state) is False:
+                break
             if self.controller.terminal:
                 break
         summary = recorder.summary(self.controller.phase.value, self.config.control_period_s)

@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import shutil
+import time
 from dataclasses import asdict
 from pathlib import Path
 
@@ -78,7 +79,14 @@ def main() -> None:
     )
     output.mkdir(parents=True, exist_ok=True)
     shutil.copy2(config_path, output / "config.yaml")
-    summary = _run(session, backend, str(output), arguments.viewer)
+    summary = _run(
+        session,
+        backend,
+        str(output),
+        arguments.viewer,
+        values["viewer"],
+        float(runtime["control_period_s"]),
+    )
     print(json.dumps(asdict(summary), ensure_ascii=False, indent=2))
 
 
@@ -87,13 +95,33 @@ def _run(
     backend: MujocoRobotBackend,
     output: str,
     viewer_enabled: bool,
+    viewer_config: dict[str, object],
+    control_period_s: float,
 ):
     if not viewer_enabled:
         return session.run(output)
     import mujoco.viewer
 
     with mujoco.viewer.launch_passive(backend.model, backend.data) as viewer:
-        return session.run(output, on_step=lambda _state: viewer.sync())
+        with viewer.lock():
+            viewer.cam.lookat[:] = viewer_config["look_at_world_m"]
+            viewer.cam.distance = float(viewer_config["distance_m"])
+            viewer.cam.azimuth = float(viewer_config["azimuth_deg"])
+            viewer.cam.elevation = float(viewer_config["elevation_deg"])
+        next_frame_time = time.perf_counter()
+
+        def refresh(_state) -> bool:
+            nonlocal next_frame_time
+            if not viewer.is_running():
+                return False
+            viewer.sync()
+            next_frame_time += control_period_s
+            delay = next_frame_time - time.perf_counter()
+            if delay > 0.0:
+                time.sleep(delay)
+            return True
+
+        return session.run(output, on_step=refresh)
 
 
 if __name__ == "__main__":
