@@ -10,13 +10,22 @@ from pathlib import Path
 
 import yaml
 
-from confined_dual_continuum.actuation.compatible_tendon_control import CompatibleTendonController
+from confined_dual_continuum.actuation.compatible_tendon_control import (
+    CompatibleTendonController,
+)
 from confined_dual_continuum.adapters.mujoco_backend import MujocoRobotBackend
 from confined_dual_continuum.application.controller import ConfinedDualContinuumController
 from confined_dual_continuum.application.session import OperationSession, SessionConfig
+from confined_dual_continuum.coordination.observer_target import (
+    ObserverTargetConfig,
+    ObserverTargetGenerator,
+)
 from confined_dual_continuum.robot.model import load_robot_model
-from confined_dual_continuum.task.operation_director import OperationDirector, OperationPlan
-from confined_dual_continuum.workspace.engine_adapter import load_engine_workspace
+from confined_dual_continuum.task.operation_director import (
+    OperationDirector,
+    OperationPlan,
+)
+from confined_dual_continuum.workspace.configuration import load_workspace
 
 
 def main() -> None:
@@ -30,21 +39,33 @@ def main() -> None:
     values = yaml.safe_load(config_path.read_text(encoding="utf-8"))
     root = config_path.parent
     robot = load_robot_model((root / values["robot_config"]).resolve())
-    workspace = load_engine_workspace((root / values["workspace_config"]).resolve())
+    workspace = load_workspace((root / values["workspace_config"]).resolve())
     backend = MujocoRobotBackend((root / values["mujoco_xml"]).resolve(), robot)
+    observer = values["observer"]
     controller = ConfinedDualContinuumController(
         CompatibleTendonController(robot.bending_model, robot.limits),
         CompatibleTendonController(robot.bending_model, robot.limits),
         robot,
+        ObserverTargetGenerator(
+            ObserverTargetConfig(
+                normal_offset_m=float(observer["normal_offset_m"]),
+                tangential_offset_m=float(observer["tangential_offset_m"]),
+                max_target_speed_mps=float(observer["maximum_target_speed_mps"]),
+            )
+        ),
     )
     task = values["task"]
-    director = OperationDirector(workspace, OperationPlan(
-        position_tolerance_m=float(task["position_tolerance_m"]),
-        base_gain=float(task["base_gain"]),
-        maximum_base_speed_mps=float(task["maximum_base_speed_mps"]),
-        local_operation_duration_s=float(task["local_operation_duration_s"]),
-        bending_tolerance_inv_m=float(task["bending_tolerance_inv_m"]),
-    ))
+    director = OperationDirector(
+        workspace,
+        OperationPlan(
+            position_tolerance_m=float(task["position_tolerance_m"]),
+            base_gain=float(task["base_gain"]),
+            maximum_base_speed_mps=float(task["maximum_base_speed_mps"]),
+            local_operation_duration_s=float(task["local_operation_duration_s"]),
+            bending_tolerance_inv_m=float(task["bending_tolerance_inv_m"]),
+            straight_executor_tip_offset_m=task["straight_executor_tip_offset_m"],
+        ),
+    )
     runtime = values["runtime"]
     session = OperationSession(backend, controller, director, SessionConfig(
         control_period_s=float(runtime["control_period_s"]),

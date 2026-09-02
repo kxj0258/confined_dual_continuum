@@ -35,7 +35,7 @@ class ObserverTargetGenerator:
         tangent = self._unit(tangent_world, "tangent_world")
         raw = (
             np.asarray(task_point_world, dtype=float)
-            - self.config.normal_offset_m * normal
+            + self.config.normal_offset_m * normal
             + self.config.tangential_offset_m * tangent
         )
         if self._previous is None:
@@ -56,4 +56,3 @@ class ObserverTargetGenerator:
         if vector.shape != (3,) or not np.isfinite(norm) or norm <= 1.0e-12:
             raise ValueError(f"{name} 必须是非零三维向量。")
         return vector / norm
-

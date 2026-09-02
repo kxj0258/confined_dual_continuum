@@ -10,7 +10,7 @@
 
 ## 重新实现
 
-- 用通用 `WorkspaceQuery` 替代 `EngineSceneQueryProtocol`。
+- 用通用受限空间配置替代场景专用查询协议。
 - 用 typed diagnostics 替代跨层 metadata 字符串通信。
 - 用小型 supervisor 替代两个大型 staged controller。
 - 把 Observer target generation 从综合控制器中拆出。
@@ -21,4 +21,3 @@
 - viewer、实时 panel、视频 hook 与手动调试应用。
 - 已删除场景的测试和针对私有函数的测试。
 - CAD 源文件及与专利统一 Demo 无关的模型。
-

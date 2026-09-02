@@ -1,4 +1,4 @@
-<mujoco model="dual_three_segment_arm">
+<mujoco model="scaled_confined_chamber_dual_continuum">
   <compiler angle="radian" />
   <option timestep="0.001" integrator="implicitfast" iterations="50" gravity="0 0 0" />
   <visual>
@@ -35,9 +35,6 @@
     <mesh name="observer_segment_3_link_2_visual_mesh" file="../meshes/dual_arm/observer/segment_3_link_2_visual.stl" scale="0.001 0.001 0.001" />
     <mesh name="observer_segment_3_link_3_visual_mesh" file="../meshes/dual_arm/observer/segment_3_link_3_visual.stl" scale="0.001 0.001 0.001" />
     <mesh name="observer_segment_3_link_4_visual_mesh" file="../meshes/dual_arm/observer/segment_3_link_4_visual.stl" scale="0.001 0.001 0.001" />
-    <mesh name="engine_visual_mesh_1" file="../engine/meshes/engine_visual_part_1.stl" scale="0.001 0.001 0.001" />
-    <mesh name="engine_visual_mesh_2" file="../engine/meshes/engine_visual_part_2.stl" scale="0.001 0.001 0.001" />
-    <mesh name="engine_collision_mesh" file="../engine/collision/engine_collision.stl" scale="0.001 0.001 0.001" />
   </asset>
   <default>
     <joint damping="0.1" armature="0.0001" limited="true" range="-0.261799387799 0.261799387799" stiffness="0.01" springref="0" />
@@ -45,10 +42,22 @@
     <site size="0.003" rgba="0.95 0.25 0.2 1" />
   </default>
   <worldbody>
-    <body name="engine_workspace" pos="-0.5 -2.5 -1.75" quat="1 0 0 0">
-      <geom name="engine_visual_1" type="mesh" mesh="engine_visual_mesh_1" rgba="0.66 0.68 0.71 1" contype="0" conaffinity="0" density="0" group="1" />
-      <geom name="engine_visual_2" type="mesh" mesh="engine_visual_mesh_2" rgba="0.66 0.68 0.71 1" contype="0" conaffinity="0" density="0" group="1" />
-      <geom name="engine_collision" type="mesh" mesh="engine_collision_mesh" rgba="0.9 0.2 0.15 0" contype="1" conaffinity="1" density="0" group="0" />
+    <body name="scaled_confined_chamber">
+      <!-- 140×100×180 mm 内腔；半透明壁兼作简单稳定的碰撞几何。 -->
+      <geom name="chamber_left" type="box" pos="-0.075 0 0.27" size="0.005 0.055 0.09" rgba="0.25 0.65 0.85 0.22" contype="1" conaffinity="1" density="0" />
+      <geom name="chamber_right" type="box" pos="0.075 0 0.27" size="0.005 0.055 0.09" rgba="0.25 0.65 0.85 0.22" contype="1" conaffinity="1" density="0" />
+      <geom name="chamber_bottom" type="box" pos="0 -0.055 0.27" size="0.075 0.005 0.09" rgba="0.25 0.65 0.85 0.22" contype="1" conaffinity="1" density="0" />
+      <geom name="chamber_top" type="box" pos="0 0.055 0.27" size="0.075 0.005 0.09" rgba="0.25 0.65 0.85 0.22" contype="1" conaffinity="1" density="0" />
+      <geom name="chamber_back" type="box" pos="0 0 0.365" size="0.075 0.055 0.005" rgba="0.95 0.55 0.18 0.40" contype="1" conaffinity="1" density="0" />
+      <!-- 四块前壁形成 55×55 mm 方形入口。 -->
+      <geom name="entry_left" type="box" pos="-0.05375 0 0.18" size="0.02625 0.055 0.005" rgba="0.25 0.65 0.85 0.30" contype="1" conaffinity="1" density="0" />
+      <geom name="entry_right" type="box" pos="0.05375 0 0.18" size="0.02625 0.055 0.005" rgba="0.25 0.65 0.85 0.30" contype="1" conaffinity="1" density="0" />
+      <geom name="entry_bottom" type="box" pos="0 -0.04125 0.18" size="0.0275 0.01375 0.005" rgba="0.25 0.65 0.85 0.30" contype="1" conaffinity="1" density="0" />
+      <geom name="entry_top" type="box" pos="0 0.04125 0.18" size="0.0275 0.01375 0.005" rgba="0.25 0.65 0.85 0.30" contype="1" conaffinity="1" density="0" />
+      <!-- 偏置挡板迫使双臂在腔内形成非直线协同构型。 -->
+      <geom name="bending_baffle" type="box" pos="0.035 0 0.275" size="0.020 0.035 0.015" rgba="0.82 0.24 0.18 0.65" contype="1" conaffinity="1" density="0" />
+      <site name="chamber_entry" type="sphere" pos="0 0 0.18" size="0.004" rgba="0.1 0.8 1 0.8" />
+      <site name="operation_target" type="sphere" pos="-0.025 0.01 0.355" size="0.005" rgba="1 0.75 0.1 1" />
     </body>
     <body name="mobile_base" pos="0 0 0" quat="1 0 0 0">
       <inertial pos="0 0 0" mass="1" diaginertia="0.001 0.001 0.001" />
@@ -81,7 +90,7 @@
           <geom name="executor_base_visual" type="mesh" mesh="executor_base_visual_mesh" pos="-0 -0.01 -0.02" contype="0" conaffinity="0" density="0" group="1" />
           <body name="executor_segment_1_link_1" pos="0 0 0">
             <joint name="executor_segment_1_link_1_y" type="hinge" axis="0 1 0" stiffness="0.0109589041096" />
-            <geom name="executor_segment_1_link_1_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="0" conaffinity="0" rgba="0.2 0.45 0.85 0" />
+            <geom name="executor_segment_1_link_1_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="1" conaffinity="1" rgba="0.2 0.45 0.85 0" />
             <geom name="executor_segment_1_link_1_visual" type="mesh" mesh="executor_segment_1_link_1_visual_mesh" pos="-0 -0.01 -0.02" contype="0" conaffinity="0" density="0" group="1" />
             <site name="executor_segment_1_link_1_hole_01_in" pos="0.005 0 0.00133975" size="0.0006" rgba="1 0.2 0.1 1" />
             <site name="executor_segment_1_link_1_hole_03_in" pos="0.0025 0.00433013 0.00066987" size="0.0006" rgba="1 0.2 0.1 1" />
@@ -103,7 +112,7 @@
             <site name="executor_segment_1_link_1_hole_12_out" pos="0.00433013 -0.0025 0.00933013" size="0.0006" rgba="0.1 0.4 1 1" />
             <body name="executor_segment_1_link_2" pos="0 0 0.01">
               <joint name="executor_segment_1_link_2_x" type="hinge" axis="1 0 0" stiffness="0.0109589041096" />
-              <geom name="executor_segment_1_link_2_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="0" conaffinity="0" rgba="0.2 0.45 0.85 0" />
+              <geom name="executor_segment_1_link_2_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="1" conaffinity="1" rgba="0.2 0.45 0.85 0" />
               <geom name="executor_segment_1_link_2_visual" type="mesh" mesh="executor_segment_1_link_2_visual_mesh" pos="-0 -0.01 -0.03" contype="0" conaffinity="0" density="0" group="1" />
               <site name="executor_segment_1_link_2_hole_01_in" pos="0.005 0 0" size="0.0006" rgba="1 0.2 0.1 1" />
               <site name="executor_segment_1_link_2_hole_03_in" pos="0.0025 0.00433013 0.00116025" size="0.0006" rgba="1 0.2 0.1 1" />
@@ -125,7 +134,7 @@
               <site name="executor_segment_1_link_2_hole_12_out" pos="0.00433013 -0.0025 0.00883975" size="0.0006" rgba="0.1 0.4 1 1" />
               <body name="executor_segment_1_link_3" pos="0 0 0.01">
                 <joint name="executor_segment_1_link_3_y" type="hinge" axis="0 1 0" stiffness="0.0109589041096" />
-                <geom name="executor_segment_1_link_3_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="0" conaffinity="0" rgba="0.2 0.45 0.85 0" />
+                <geom name="executor_segment_1_link_3_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="1" conaffinity="1" rgba="0.2 0.45 0.85 0" />
                 <geom name="executor_segment_1_link_3_visual" type="mesh" mesh="executor_segment_1_link_3_visual_mesh" pos="-0 -0.01 -0.04" contype="0" conaffinity="0" density="0" group="1" />
                 <site name="executor_segment_1_link_3_hole_01_in" pos="0.005 0 0.00133975" size="0.0006" rgba="1 0.2 0.1 1" />
                 <site name="executor_segment_1_link_3_hole_03_in" pos="0.0025 0.00433013 0.00066987" size="0.0006" rgba="1 0.2 0.1 1" />
@@ -147,7 +156,7 @@
                 <site name="executor_segment_1_link_3_hole_12_out" pos="0.00433013 -0.0025 0.00933013" size="0.0006" rgba="0.1 0.4 1 1" />
                 <body name="executor_segment_1_link_4" pos="0 0 0.01">
                   <joint name="executor_segment_1_link_4_x" type="hinge" axis="1 0 0" stiffness="0.0109589041096" />
-                  <geom name="executor_segment_1_link_4_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="0" conaffinity="0" rgba="0.2 0.45 0.85 0" />
+                  <geom name="executor_segment_1_link_4_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="1" conaffinity="1" rgba="0.2 0.45 0.85 0" />
                   <geom name="executor_segment_1_link_4_visual" type="mesh" mesh="executor_segment_1_link_4_visual_mesh" pos="-0 -0.01 -0.05" contype="0" conaffinity="0" density="0" group="1" />
                   <site name="executor_segment_1_tip" pos="0 0 0.01" quat="1 0 0 0" />
                   <site name="executor_segment_1_link_4_hole_01_in" pos="0.005 0 0" size="0.0006" rgba="1 0.2 0.1 1" />
@@ -170,7 +179,7 @@
                   <site name="executor_segment_1_link_4_hole_12_out" pos="0.00433013 -0.0025 0.00883975" size="0.0006" rgba="0.1 0.4 1 1" />
                   <body name="executor_segment_2_link_1" pos="0 0 0.01">
                     <joint name="executor_segment_2_link_1_y" type="hinge" axis="0 1 0" stiffness="0.0109589041096" />
-                    <geom name="executor_segment_2_link_1_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="0" conaffinity="0" rgba="0.2 0.45 0.85 0" />
+                    <geom name="executor_segment_2_link_1_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="1" conaffinity="1" rgba="0.2 0.45 0.85 0" />
                     <geom name="executor_segment_2_link_1_visual" type="mesh" mesh="executor_segment_2_link_1_visual_mesh" pos="-0 -0.01 -0.06" contype="0" conaffinity="0" density="0" group="1" />
                     <site name="executor_segment_2_link_1_hole_01_in" pos="0.005 0 0.00133975" size="0.0006" rgba="1 0.2 0.1 1" />
                     <site name="executor_segment_2_link_1_hole_04_in" pos="0 0.005 0" size="0.0006" rgba="1 0.2 0.1 1" />
@@ -186,7 +195,7 @@
                     <site name="executor_segment_2_link_1_hole_12_out" pos="0.00433013 -0.0025 0.00933013" size="0.0006" rgba="0.1 0.4 1 1" />
                     <body name="executor_segment_2_link_2" pos="0 0 0.01">
                       <joint name="executor_segment_2_link_2_x" type="hinge" axis="1 0 0" stiffness="0.0109589041096" />
-                      <geom name="executor_segment_2_link_2_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="0" conaffinity="0" rgba="0.2 0.45 0.85 0" />
+                      <geom name="executor_segment_2_link_2_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="1" conaffinity="1" rgba="0.2 0.45 0.85 0" />
                       <geom name="executor_segment_2_link_2_visual" type="mesh" mesh="executor_segment_2_link_2_visual_mesh" pos="-0 -0.01 -0.07" contype="0" conaffinity="0" density="0" group="1" />
                       <site name="executor_segment_2_link_2_hole_01_in" pos="0.005 0 0" size="0.0006" rgba="1 0.2 0.1 1" />
                       <site name="executor_segment_2_link_2_hole_04_in" pos="0 0.005 0.00133975" size="0.0006" rgba="1 0.2 0.1 1" />
@@ -202,7 +211,7 @@
                       <site name="executor_segment_2_link_2_hole_12_out" pos="0.00433013 -0.0025 0.00883975" size="0.0006" rgba="0.1 0.4 1 1" />
                       <body name="executor_segment_2_link_3" pos="0 0 0.01">
                         <joint name="executor_segment_2_link_3_y" type="hinge" axis="0 1 0" stiffness="0.0109589041096" />
-                        <geom name="executor_segment_2_link_3_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="0" conaffinity="0" rgba="0.2 0.45 0.85 0" />
+                        <geom name="executor_segment_2_link_3_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="1" conaffinity="1" rgba="0.2 0.45 0.85 0" />
                         <geom name="executor_segment_2_link_3_visual" type="mesh" mesh="executor_segment_2_link_3_visual_mesh" pos="-0 -0.01 -0.08" contype="0" conaffinity="0" density="0" group="1" />
                         <site name="executor_segment_2_link_3_hole_01_in" pos="0.005 0 0.00133975" size="0.0006" rgba="1 0.2 0.1 1" />
                         <site name="executor_segment_2_link_3_hole_04_in" pos="0 0.005 0" size="0.0006" rgba="1 0.2 0.1 1" />
@@ -218,7 +227,7 @@
                         <site name="executor_segment_2_link_3_hole_12_out" pos="0.00433013 -0.0025 0.00933013" size="0.0006" rgba="0.1 0.4 1 1" />
                         <body name="executor_segment_2_link_4" pos="0 0 0.01">
                           <joint name="executor_segment_2_link_4_x" type="hinge" axis="1 0 0" stiffness="0.0109589041096" />
-                          <geom name="executor_segment_2_link_4_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="0" conaffinity="0" rgba="0.2 0.45 0.85 0" />
+                          <geom name="executor_segment_2_link_4_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="1" conaffinity="1" rgba="0.2 0.45 0.85 0" />
                           <geom name="executor_segment_2_link_4_visual" type="mesh" mesh="executor_segment_2_link_4_visual_mesh" pos="-0 -0.01 -0.09" contype="0" conaffinity="0" density="0" group="1" />
                           <site name="executor_segment_2_tip" pos="0 0 0.01" quat="1 0 0 0" />
                           <site name="executor_segment_2_link_4_hole_01_in" pos="0.005 0 0" size="0.0006" rgba="1 0.2 0.1 1" />
@@ -235,7 +244,7 @@
                           <site name="executor_segment_2_link_4_hole_12_out" pos="0.00433013 -0.0025 0.00883975" size="0.0006" rgba="0.1 0.4 1 1" />
                           <body name="executor_segment_3_link_1" pos="0 0 0.01">
                             <joint name="executor_segment_3_link_1_y" type="hinge" axis="0 1 0" stiffness="0.0109589041096" />
-                            <geom name="executor_segment_3_link_1_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="0" conaffinity="0" rgba="0.2 0.45 0.85 0" />
+                            <geom name="executor_segment_3_link_1_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="1" conaffinity="1" rgba="0.2 0.45 0.85 0" />
                             <geom name="executor_segment_3_link_1_visual" type="mesh" mesh="executor_segment_3_link_1_visual_mesh" pos="-0 -0.01 -0.1" contype="0" conaffinity="0" density="0" group="1" />
                             <site name="executor_segment_3_link_1_hole_04_in" pos="0 0.005 0" size="0.0006" rgba="1 0.2 0.1 1" />
                             <site name="executor_segment_3_link_1_hole_08_in" pos="-0.00433013 -0.0025 0.00116025" size="0.0006" rgba="1 0.2 0.1 1" />
@@ -245,7 +254,7 @@
                             <site name="executor_segment_3_link_1_hole_12_out" pos="0.00433013 -0.0025 0.00933013" size="0.0006" rgba="0.1 0.4 1 1" />
                             <body name="executor_segment_3_link_2" pos="0 0 0.01">
                               <joint name="executor_segment_3_link_2_x" type="hinge" axis="1 0 0" stiffness="0.0109589041096" />
-                              <geom name="executor_segment_3_link_2_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="0" conaffinity="0" rgba="0.2 0.45 0.85 0" />
+                              <geom name="executor_segment_3_link_2_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="1" conaffinity="1" rgba="0.2 0.45 0.85 0" />
                               <geom name="executor_segment_3_link_2_visual" type="mesh" mesh="executor_segment_3_link_2_visual_mesh" pos="-0 -0.01 -0.11" contype="0" conaffinity="0" density="0" group="1" />
                               <site name="executor_segment_3_link_2_hole_04_in" pos="0 0.005 0.00133975" size="0.0006" rgba="1 0.2 0.1 1" />
                               <site name="executor_segment_3_link_2_hole_08_in" pos="-0.00433013 -0.0025 0.00066987" size="0.0006" rgba="1 0.2 0.1 1" />
@@ -255,7 +264,7 @@
                               <site name="executor_segment_3_link_2_hole_12_out" pos="0.00433013 -0.0025 0.00883975" size="0.0006" rgba="0.1 0.4 1 1" />
                               <body name="executor_segment_3_link_3" pos="0 0 0.01">
                                 <joint name="executor_segment_3_link_3_y" type="hinge" axis="0 1 0" stiffness="0.0109589041096" />
-                                <geom name="executor_segment_3_link_3_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="0" conaffinity="0" rgba="0.2 0.45 0.85 0" />
+                                <geom name="executor_segment_3_link_3_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="1" conaffinity="1" rgba="0.2 0.45 0.85 0" />
                                 <geom name="executor_segment_3_link_3_visual" type="mesh" mesh="executor_segment_3_link_3_visual_mesh" pos="-0 -0.01 -0.12" contype="0" conaffinity="0" density="0" group="1" />
                                 <site name="executor_segment_3_link_3_hole_04_in" pos="0 0.005 0" size="0.0006" rgba="1 0.2 0.1 1" />
                                 <site name="executor_segment_3_link_3_hole_08_in" pos="-0.00433013 -0.0025 0.00116025" size="0.0006" rgba="1 0.2 0.1 1" />
@@ -265,7 +274,7 @@
                                 <site name="executor_segment_3_link_3_hole_12_out" pos="0.00433013 -0.0025 0.00933013" size="0.0006" rgba="0.1 0.4 1 1" />
                                 <body name="executor_segment_3_link_4" pos="0 0 0.01">
                                   <joint name="executor_segment_3_link_4_x" type="hinge" axis="1 0 0" stiffness="0.0109589041096" />
-                                  <geom name="executor_segment_3_link_4_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="0" conaffinity="0" rgba="0.2 0.45 0.85 0" />
+                                  <geom name="executor_segment_3_link_4_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="1" conaffinity="1" rgba="0.2 0.45 0.85 0" />
                                   <geom name="executor_segment_3_link_4_visual" type="mesh" mesh="executor_segment_3_link_4_visual_mesh" pos="-0 -0.01 -0.13" contype="0" conaffinity="0" density="0" group="1" />
                                   <site name="executor_segment_3_tip" pos="0 0 0.01" quat="1 0 0 0" />
                                   <site name="executor_tip" pos="0 0 0.01" quat="1 0 0 0" />
@@ -311,7 +320,7 @@
           <geom name="observer_base_visual" type="mesh" mesh="observer_base_visual_mesh" pos="-0 0.01 -0.02" contype="0" conaffinity="0" density="0" group="1" />
           <body name="observer_segment_1_link_1" pos="0 0 0">
             <joint name="observer_segment_1_link_1_y" type="hinge" axis="0 1 0" stiffness="0.0109589041096" />
-            <geom name="observer_segment_1_link_1_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="0" conaffinity="0" rgba="0.2 0.45 0.85 0" />
+            <geom name="observer_segment_1_link_1_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="1" conaffinity="1" rgba="0.2 0.45 0.85 0" />
             <geom name="observer_segment_1_link_1_visual" type="mesh" mesh="observer_segment_1_link_1_visual_mesh" pos="-0 0.01 -0.02" contype="0" conaffinity="0" density="0" group="1" />
             <site name="observer_segment_1_link_1_hole_01_in" pos="0.005 0 0.00133975" size="0.0006" rgba="1 0.2 0.1 1" />
             <site name="observer_segment_1_link_1_hole_02_in" pos="0.00433013 0.0025 0.00116025" size="0.0006" rgba="1 0.2 0.1 1" />
@@ -333,7 +342,7 @@
             <site name="observer_segment_1_link_1_hole_11_out" pos="0.0025 -0.00433013 0.00883975" size="0.0006" rgba="0.1 0.4 1 1" />
             <body name="observer_segment_1_link_2" pos="0 0 0.01">
               <joint name="observer_segment_1_link_2_x" type="hinge" axis="1 0 0" stiffness="0.0109589041096" />
-              <geom name="observer_segment_1_link_2_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="0" conaffinity="0" rgba="0.2 0.45 0.85 0" />
+              <geom name="observer_segment_1_link_2_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="1" conaffinity="1" rgba="0.2 0.45 0.85 0" />
               <geom name="observer_segment_1_link_2_visual" type="mesh" mesh="observer_segment_1_link_2_visual_mesh" pos="-0 0.01 -0.03" contype="0" conaffinity="0" density="0" group="1" />
               <site name="observer_segment_1_link_2_hole_01_in" pos="0.005 0 0" size="0.0006" rgba="1 0.2 0.1 1" />
               <site name="observer_segment_1_link_2_hole_02_in" pos="0.00433013 0.0025 0.00066987" size="0.0006" rgba="1 0.2 0.1 1" />
@@ -355,7 +364,7 @@
               <site name="observer_segment_1_link_2_hole_11_out" pos="0.0025 -0.00433013 0.00933013" size="0.0006" rgba="0.1 0.4 1 1" />
               <body name="observer_segment_1_link_3" pos="0 0 0.01">
                 <joint name="observer_segment_1_link_3_y" type="hinge" axis="0 1 0" stiffness="0.0109589041096" />
-                <geom name="observer_segment_1_link_3_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="0" conaffinity="0" rgba="0.2 0.45 0.85 0" />
+                <geom name="observer_segment_1_link_3_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="1" conaffinity="1" rgba="0.2 0.45 0.85 0" />
                 <geom name="observer_segment_1_link_3_visual" type="mesh" mesh="observer_segment_1_link_3_visual_mesh" pos="-0 0.01 -0.04" contype="0" conaffinity="0" density="0" group="1" />
                 <site name="observer_segment_1_link_3_hole_01_in" pos="0.005 0 0.00133975" size="0.0006" rgba="1 0.2 0.1 1" />
                 <site name="observer_segment_1_link_3_hole_02_in" pos="0.00433013 0.0025 0.00116025" size="0.0006" rgba="1 0.2 0.1 1" />
@@ -377,7 +386,7 @@
                 <site name="observer_segment_1_link_3_hole_11_out" pos="0.0025 -0.00433013 0.00883975" size="0.0006" rgba="0.1 0.4 1 1" />
                 <body name="observer_segment_1_link_4" pos="0 0 0.01">
                   <joint name="observer_segment_1_link_4_x" type="hinge" axis="1 0 0" stiffness="0.0109589041096" />
-                  <geom name="observer_segment_1_link_4_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="0" conaffinity="0" rgba="0.2 0.45 0.85 0" />
+                  <geom name="observer_segment_1_link_4_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="1" conaffinity="1" rgba="0.2 0.45 0.85 0" />
                   <geom name="observer_segment_1_link_4_visual" type="mesh" mesh="observer_segment_1_link_4_visual_mesh" pos="-0 0.01 -0.05" contype="0" conaffinity="0" density="0" group="1" />
                   <site name="observer_segment_1_tip" pos="0 0 0.01" quat="1 0 0 0" />
                   <site name="observer_segment_1_link_4_hole_01_in" pos="0.005 0 0" size="0.0006" rgba="1 0.2 0.1 1" />
@@ -400,7 +409,7 @@
                   <site name="observer_segment_1_link_4_hole_11_out" pos="0.0025 -0.00433013 0.00933013" size="0.0006" rgba="0.1 0.4 1 1" />
                   <body name="observer_segment_2_link_1" pos="0 0 0.01">
                     <joint name="observer_segment_2_link_1_y" type="hinge" axis="0 1 0" stiffness="0.0109589041096" />
-                    <geom name="observer_segment_2_link_1_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="0" conaffinity="0" rgba="0.2 0.45 0.85 0" />
+                    <geom name="observer_segment_2_link_1_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="1" conaffinity="1" rgba="0.2 0.45 0.85 0" />
                     <geom name="observer_segment_2_link_1_visual" type="mesh" mesh="observer_segment_2_link_1_visual_mesh" pos="-0 0.01 -0.06" contype="0" conaffinity="0" density="0" group="1" />
                     <site name="observer_segment_2_link_1_hole_02_in" pos="0.00433013 0.0025 0.00116025" size="0.0006" rgba="1 0.2 0.1 1" />
                     <site name="observer_segment_2_link_1_hole_03_in" pos="0.0025 0.00433013 0.00066987" size="0.0006" rgba="1 0.2 0.1 1" />
@@ -416,7 +425,7 @@
                     <site name="observer_segment_2_link_1_hole_11_out" pos="0.0025 -0.00433013 0.00883975" size="0.0006" rgba="0.1 0.4 1 1" />
                     <body name="observer_segment_2_link_2" pos="0 0 0.01">
                       <joint name="observer_segment_2_link_2_x" type="hinge" axis="1 0 0" stiffness="0.0109589041096" />
-                      <geom name="observer_segment_2_link_2_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="0" conaffinity="0" rgba="0.2 0.45 0.85 0" />
+                      <geom name="observer_segment_2_link_2_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="1" conaffinity="1" rgba="0.2 0.45 0.85 0" />
                       <geom name="observer_segment_2_link_2_visual" type="mesh" mesh="observer_segment_2_link_2_visual_mesh" pos="-0 0.01 -0.07" contype="0" conaffinity="0" density="0" group="1" />
                       <site name="observer_segment_2_link_2_hole_02_in" pos="0.00433013 0.0025 0.00066987" size="0.0006" rgba="1 0.2 0.1 1" />
                       <site name="observer_segment_2_link_2_hole_03_in" pos="0.0025 0.00433013 0.00116025" size="0.0006" rgba="1 0.2 0.1 1" />
@@ -432,7 +441,7 @@
                       <site name="observer_segment_2_link_2_hole_11_out" pos="0.0025 -0.00433013 0.00933013" size="0.0006" rgba="0.1 0.4 1 1" />
                       <body name="observer_segment_2_link_3" pos="0 0 0.01">
                         <joint name="observer_segment_2_link_3_y" type="hinge" axis="0 1 0" stiffness="0.0109589041096" />
-                        <geom name="observer_segment_2_link_3_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="0" conaffinity="0" rgba="0.2 0.45 0.85 0" />
+                        <geom name="observer_segment_2_link_3_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="1" conaffinity="1" rgba="0.2 0.45 0.85 0" />
                         <geom name="observer_segment_2_link_3_visual" type="mesh" mesh="observer_segment_2_link_3_visual_mesh" pos="-0 0.01 -0.08" contype="0" conaffinity="0" density="0" group="1" />
                         <site name="observer_segment_2_link_3_hole_02_in" pos="0.00433013 0.0025 0.00116025" size="0.0006" rgba="1 0.2 0.1 1" />
                         <site name="observer_segment_2_link_3_hole_03_in" pos="0.0025 0.00433013 0.00066987" size="0.0006" rgba="1 0.2 0.1 1" />
@@ -448,7 +457,7 @@
                         <site name="observer_segment_2_link_3_hole_11_out" pos="0.0025 -0.00433013 0.00883975" size="0.0006" rgba="0.1 0.4 1 1" />
                         <body name="observer_segment_2_link_4" pos="0 0 0.01">
                           <joint name="observer_segment_2_link_4_x" type="hinge" axis="1 0 0" stiffness="0.0109589041096" />
-                          <geom name="observer_segment_2_link_4_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="0" conaffinity="0" rgba="0.2 0.45 0.85 0" />
+                          <geom name="observer_segment_2_link_4_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="1" conaffinity="1" rgba="0.2 0.45 0.85 0" />
                           <geom name="observer_segment_2_link_4_visual" type="mesh" mesh="observer_segment_2_link_4_visual_mesh" pos="-0 0.01 -0.09" contype="0" conaffinity="0" density="0" group="1" />
                           <site name="observer_segment_2_tip" pos="0 0 0.01" quat="1 0 0 0" />
                           <site name="observer_segment_2_link_4_hole_02_in" pos="0.00433013 0.0025 0.00066987" size="0.0006" rgba="1 0.2 0.1 1" />
@@ -465,7 +474,7 @@
                           <site name="observer_segment_2_link_4_hole_11_out" pos="0.0025 -0.00433013 0.0065" size="0.0006" rgba="0.1 0.4 1 1" />
                           <body name="observer_segment_3_link_1" pos="0 0 0.01">
                             <joint name="observer_segment_3_link_1_y" type="hinge" axis="0 1 0" stiffness="0.0109589041096" />
-                            <geom name="observer_segment_3_link_1_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="0" conaffinity="0" rgba="0.2 0.45 0.85 0" />
+                            <geom name="observer_segment_3_link_1_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="1" conaffinity="1" rgba="0.2 0.45 0.85 0" />
                             <geom name="observer_segment_3_link_1_visual" type="mesh" mesh="observer_segment_3_link_1_visual_mesh" pos="-0 0.01 -0.1" contype="0" conaffinity="0" density="0" group="1" />
                             <site name="observer_segment_3_link_1_hole_02_in" pos="0.00433013 0.0025 0.00116025" size="0.0006" rgba="1 0.2 0.1 1" />
                             <site name="observer_segment_3_link_1_hole_06_in" pos="-0.00433013 0.0025 0.00116025" size="0.0006" rgba="1 0.2 0.1 1" />
@@ -475,7 +484,7 @@
                             <site name="observer_segment_3_link_1_hole_10_out" pos="0 -0.005 0.00866025" size="0.0006" rgba="0.1 0.4 1 1" />
                             <body name="observer_segment_3_link_2" pos="0 0 0.01">
                               <joint name="observer_segment_3_link_2_x" type="hinge" axis="1 0 0" stiffness="0.0109589041096" />
-                              <geom name="observer_segment_3_link_2_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="0" conaffinity="0" rgba="0.2 0.45 0.85 0" />
+                              <geom name="observer_segment_3_link_2_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="1" conaffinity="1" rgba="0.2 0.45 0.85 0" />
                               <geom name="observer_segment_3_link_2_visual" type="mesh" mesh="observer_segment_3_link_2_visual_mesh" pos="-0 0.01 -0.11" contype="0" conaffinity="0" density="0" group="1" />
                               <site name="observer_segment_3_link_2_hole_02_in" pos="0.00433013 0.0025 0.00066987" size="0.0006" rgba="1 0.2 0.1 1" />
                               <site name="observer_segment_3_link_2_hole_06_in" pos="-0.00433013 0.0025 0.00066987" size="0.0006" rgba="1 0.2 0.1 1" />
@@ -485,7 +494,7 @@
                               <site name="observer_segment_3_link_2_hole_10_out" pos="0 -0.005 0.01" size="0.0006" rgba="0.1 0.4 1 1" />
                               <body name="observer_segment_3_link_3" pos="0 0 0.01">
                                 <joint name="observer_segment_3_link_3_y" type="hinge" axis="0 1 0" stiffness="0.0109589041096" />
-                                <geom name="observer_segment_3_link_3_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="0" conaffinity="0" rgba="0.2 0.45 0.85 0" />
+                                <geom name="observer_segment_3_link_3_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="1" conaffinity="1" rgba="0.2 0.45 0.85 0" />
                                 <geom name="observer_segment_3_link_3_visual" type="mesh" mesh="observer_segment_3_link_3_visual_mesh" pos="-0 0.01 -0.12" contype="0" conaffinity="0" density="0" group="1" />
                                 <site name="observer_segment_3_link_3_hole_02_in" pos="0.00433013 0.0025 0.00116025" size="0.0006" rgba="1 0.2 0.1 1" />
                                 <site name="observer_segment_3_link_3_hole_06_in" pos="-0.00433013 0.0025 0.00116025" size="0.0006" rgba="1 0.2 0.1 1" />
@@ -495,7 +504,7 @@
                                 <site name="observer_segment_3_link_3_hole_10_out" pos="0 -0.005 0.00866025" size="0.0006" rgba="0.1 0.4 1 1" />
                                 <body name="observer_segment_3_link_4" pos="0 0 0.01">
                                   <joint name="observer_segment_3_link_4_x" type="hinge" axis="1 0 0" stiffness="0.0109589041096" />
-                                  <geom name="observer_segment_3_link_4_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="0" conaffinity="0" rgba="0.2 0.45 0.85 0" />
+                                  <geom name="observer_segment_3_link_4_collision" type="capsule" fromto="0 0 0 0 0 0.01" size="0.00625" group="0" mass="0.0024748225" contype="1" conaffinity="1" rgba="0.2 0.45 0.85 0" />
                                   <geom name="observer_segment_3_link_4_visual" type="mesh" mesh="observer_segment_3_link_4_visual_mesh" pos="-0 0.01 -0.13" contype="0" conaffinity="0" density="0" group="1" />
                                   <site name="observer_segment_3_tip" pos="0 0 0.01" quat="1 0 0 0" />
                                   <site name="observer_tip" pos="0 0 0.01" quat="1 0 0 0" />

@@ -1,7 +1,7 @@
 name: confined_dual_operation
 robot_config: ../robot/three_segment_nine_tendon.yaml
-workspace_config: ../workspace/engine_embodiment.yaml
-mujoco_xml: ../../assets/mujoco/dual_three_segment_arm_tendon_with_visuals_mobile_base.xml
+workspace_config: ../workspace/scaled_confined_chamber.yaml
+mujoco_xml: ../../assets/mujoco/scaled_confined_chamber_dual_continuum.xml
 output_directory: ../../outputs/confined_dual_operation
 
 runtime:
@@ -14,3 +14,9 @@ task:
   maximum_base_speed_mps: 0.10
   local_operation_duration_s: 5.0
   bending_tolerance_inv_m: 0.1
+  straight_executor_tip_offset_m: [0.0, 0.01, 0.14]
+
+observer:
+  normal_offset_m: 0.060
+  tangential_offset_m: 0.020
+  maximum_target_speed_mps: 0.025

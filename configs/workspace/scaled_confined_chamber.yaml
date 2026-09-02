@@ -1,0 +1,21 @@
+name: scaled_confined_chamber
+description: 与 120 mm 双连续体机械臂匹配的缩比弯曲受限空间
+
+entry:
+  center_world_m: [0.0, 0.0, 0.18]
+  inward_direction_world: [0.0, 0.0, 1.0]
+  radius_m: 0.0275
+
+task_region:
+  name: inner_back_surface
+  center_world_m: [-0.025, 0.010, 0.355]
+  radius_m: 0.008
+
+contact_surface:
+  point_world_m: [-0.025, 0.010, 0.355]
+  normal_world: [0.0, 0.0, -1.0]
+
+forbidden_regions:
+  - name: bending_baffle
+    center_world_m: [0.035, 0.0, 0.275]
+    radius_m: 0.040

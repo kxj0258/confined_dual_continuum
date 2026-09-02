@@ -1,4 +1,4 @@
-"""与具体发动机模型无关的受限空间描述。"""
+"""与具体场景几何实现无关的受限空间描述。"""
 
 from __future__ import annotations
 
@@ -58,4 +58,3 @@ class ConfinedWorkspace:
     task_region: Region
     forbidden_regions: tuple[Region, ...] = ()
     contact_surface: ContactSurface | None = None
-

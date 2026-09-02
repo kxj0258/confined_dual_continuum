@@ -47,9 +47,10 @@ class ConfinedDualContinuumController:
         executor_actuation: CompatibleTendonController,
         observer_actuation: CompatibleTendonController,
         robot: RobotModel,
+        observer_target: ObserverTargetGenerator,
     ) -> None:
         self.supervisor = ConfinedOperationSupervisor()
-        self.observer_target = ObserverTargetGenerator()
+        self.observer_target = observer_target
         self.coordinator = DualArmCoordinator()
         self.executor_actuation = executor_actuation
         self.observer_actuation = observer_actuation

@@ -5,7 +5,7 @@ from confined_dual_continuum.workspace.model import (
     WorkspaceEntry,
 )
 from confined_dual_continuum.workspace.query import Clearance, WorkspaceQuery
-from confined_dual_continuum.workspace.engine_adapter import load_engine_workspace
+from confined_dual_continuum.workspace.configuration import load_workspace
 
 __all__ = [
     "Clearance",
@@ -14,6 +14,5 @@ __all__ = [
     "Region",
     "WorkspaceEntry",
     "WorkspaceQuery",
-    "load_engine_workspace",
+    "load_workspace",
 ]
-

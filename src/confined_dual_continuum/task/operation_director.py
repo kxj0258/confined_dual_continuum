@@ -17,6 +17,7 @@ class OperationPlan:
     maximum_base_speed_mps: float
     local_operation_duration_s: float
     bending_tolerance_inv_m: float
+    straight_executor_tip_offset_m: np.ndarray
 
     def __post_init__(self) -> None:
         values = (
@@ -28,6 +29,10 @@ class OperationPlan:
         )
         if any(value <= 0.0 for value in values):
             raise ValueError("任务规划参数必须全部为正。")
+        offset = np.asarray(self.straight_executor_tip_offset_m, dtype=float)
+        if offset.shape != (3,) or not np.all(np.isfinite(offset)):
+            raise ValueError("直线构型末端偏置必须是有限三维向量。")
+        object.__setattr__(self, "straight_executor_tip_offset_m", offset.copy())
 
 
 @dataclass(frozen=True)
@@ -58,8 +63,15 @@ class OperationDirector:
         if self._initial_base_position is None:
             self._initial_base_position = state.base_pose.position.copy()
         entry = self.workspace.entry.center_world
-        task = self.workspace.task_region.center_world
-        staging_base = entry - np.array([0.0, 0.01, 0.14])
+        surface = self.workspace.contact_surface
+        task = (
+            surface.point_world
+            if surface is not None
+            else self.workspace.task_region.center_world
+        )
+        tip_offset = self.plan.straight_executor_tip_offset_m
+        staging_base = entry - tip_offset
+        insertion_base = task - tip_offset
         target = task if phase in {
             ConfinedOperationPhase.COOPERATIVE_INSERTION,
             ConfinedOperationPhase.BASE_LOCK,
@@ -67,14 +79,24 @@ class OperationDirector:
         } else entry
         if phase == ConfinedOperationPhase.RETREAT:
             # 退回时机械臂先保持相对基座的直线构型，随基座整体退出。
-            target = state.base_pose.position + np.array([0.0, 0.01, 0.14])
-        base_target = (
-            self._initial_base_position
-            if phase == ConfinedOperationPhase.RETREAT
-            else staging_base
-        )
+            target = state.base_pose.position + tip_offset
+        insertion_phases = {
+            ConfinedOperationPhase.COOPERATIVE_INSERTION,
+            ConfinedOperationPhase.BASE_LOCK,
+            ConfinedOperationPhase.LOCAL_OPERATION,
+        }
+        if phase == ConfinedOperationPhase.RETREAT:
+            base_target = self._initial_base_position
+        elif phase in insertion_phases:
+            base_target = insertion_base
+        else:
+            base_target = staging_base
         base_twist = np.zeros(6)
-        if phase in {ConfinedOperationPhase.BASE_APPROACH, ConfinedOperationPhase.RETREAT}:
+        if phase in {
+            ConfinedOperationPhase.BASE_APPROACH,
+            ConfinedOperationPhase.COOPERATIVE_INSERTION,
+            ConfinedOperationPhase.RETREAT,
+        }:
             base_twist[:3] = self._limited_base_velocity(
                 base_target - state.base_pose.position
             )
@@ -90,11 +112,19 @@ class OperationDirector:
             ),
             retreat_complete=(
                 phase == ConfinedOperationPhase.RETREAT
-                and np.linalg.norm(state.executor.bending) <= self.plan.bending_tolerance_inv_m
-                and np.linalg.norm(state.base_pose.position - self._initial_base_position) <= tolerance
+                and np.linalg.norm(state.executor.bending)
+                <= self.plan.bending_tolerance_inv_m
+                and np.linalg.norm(
+                    state.base_pose.position - self._initial_base_position
+                )
+                <= tolerance
             ),
         )
-        normal = self.workspace.entry.inward_direction_world
+        normal = (
+            surface.normal_world
+            if surface is not None
+            else self.workspace.entry.inward_direction_world
+        )
         tangent = _orthogonal_tangent(normal)
         return OperationSetpoint(signals, target, task, normal, tangent, base_twist)
 
