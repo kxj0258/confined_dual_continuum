@@ -1,0 +1,35 @@
+{
+  "tolerance_m": 0.004215974805911969,
+  "rule": "unique_cloud_nearest_neighbor_p95",
+  "minimum_m": [
+    -0.0794856462856543,
+    -0.06141019665003672,
+    0.08825313905544924
+  ],
+  "maximum_m": [
+    0.07991933776359467,
+    0.0792972489144191,
+    0.14
+  ],
+  "inner_minimum_m": [
+    -0.0635451478807294,
+    -0.04733945209359114,
+    0.09342782514990432
+  ],
+  "inner_maximum_m": [
+    0.06397883935866977,
+    0.06522650435797352,
+    0.13482531390554495
+  ],
+  "check_step_m": 0.0005,
+  "point_count": 2222,
+  "source": "C:\\work_kxj\\confined_dual_continuum\\outputs\\drive_workspace_diagnostics\\20260914T061705Z-125ec168\\samples.jsonl",
+  "source_sha256": "a782070d9f6808c39fc3ab8866c1cbe04cc1f2971a95aa297a3cca9b07022c06",
+  "frame": "mobile_base_frame",
+  "initial_tip_base_m": [
+    0.0,
+    0.01,
+    0.14
+  ],
+  "cloud_sha256": "1aa67a47fd4e91a9d3dec62c04b6b6132d75bd8effe9a3304aa21ce451fe3701"
+}

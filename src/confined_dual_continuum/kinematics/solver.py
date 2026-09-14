@@ -1,4 +1,4 @@
-"""不依赖具体机器人后端的速度级最小二乘求解。"""
+"""不依赖具体机器人后端的速度级阻尼最小二乘求解。"""
 
 import numpy as np
 
@@ -13,8 +13,9 @@ def solve_velocity(
     target = np.asarray(target_velocity, dtype=float)
     if matrix.ndim != 2 or target.shape != (matrix.shape[0],):
         raise ValueError("Jacobian 与目标速度维度不匹配。")
-    if damping < 0.0:
-        raise ValueError("damping 不能为负。")
+    if not np.isfinite(damping) or damping <= 0.0:
+        raise ValueError("damping 必须为有限正数。")
+    if not np.all(np.isfinite(matrix)) or not np.all(np.isfinite(target)):
+        raise ValueError("Jacobian 与速度必须为有限值。")
     lhs = matrix @ matrix.T + damping * damping * np.eye(matrix.shape[0])
     return matrix.T @ np.linalg.solve(lhs, target)
-

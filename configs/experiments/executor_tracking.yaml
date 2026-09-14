@@ -1,0 +1,33 @@
+# 独立主臂跟踪；所有驱动限制只从 robot_config 读取，不在此覆盖。
+robot_config: ../robot/three_segment_nine_tendon.yaml
+mujoco_xml: ../../assets/mujoco/multi_task_patent_demo.xml
+output_directory: ../../outputs/executor_tracking
+control_hz: 20
+mode: realtime
+gain: 2.0
+damping: 0.0001
+joint_margin_deg: 0.5
+joint_guard_enabled: false
+time_scale: 1.0
+trajectory_directory: ../trajectories
+# 原始人工路点仅保留作历史参数参考；运行入口使用已通过点云检查的目录。
+original_trajectory_reference:
+  times_s: [0, 2, 4, 6, 8, 10]
+  points_base_m:
+    - [0.000, 0.010, 0.140]
+    - [0.012, 0.018, 0.137]
+    - [0.018, 0.026, 0.133]
+    - [0.006, 0.030, 0.135]
+    - [-0.006, 0.020, 0.138]
+    - [0.000, 0.010, 0.140]
+viewer:
+  enabled: true
+  refresh_hz: 20
+error_window:
+  enabled: true
+  refresh_hz: 20
+video:
+  enabled: true
+  fps: 20
+  width: 640
+  height: 480

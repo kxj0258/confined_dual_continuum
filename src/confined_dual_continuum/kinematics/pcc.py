@@ -1,0 +1,164 @@
+"""三段常曲率连续体运动学。"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+import numpy as np
+
+
+@dataclass(frozen=True)
+class PCCResult:
+    tip_transform: np.ndarray
+    centerline: np.ndarray
+
+
+def constant_curvature_transform(bending: np.ndarray, length_m: float) -> np.ndarray:
+    """计算单段 SE(3) 变换；bending 为 [kx, ky]，单位 1/m。"""
+
+    kx, ky = _vector(bending, 2, "bending")
+    if length_m < 0.0:
+        raise ValueError("length_m 不能为负。")
+    omega = np.array([-ky, kx, 0.0])
+    curvature = float(np.linalg.norm(omega))
+    transform = np.eye(4)
+    if curvature < 1.0e-10:
+        transform[2, 3] = length_m
+        return transform
+
+    omega_hat = _skew(omega)
+    theta = curvature * length_m
+    sinc = float(np.sinc(theta / np.pi))
+    cosc = 0.5 * float(np.sinc(theta / (2 * np.pi))) ** 2
+    sincc = (1/6 - theta**2/120 + theta**4/5040) if abs(theta) < 1e-3 else (theta - np.sin(theta)) / theta**3
+    rotation = (
+        np.eye(3)
+        + length_m * sinc * omega_hat
+        + length_m**2 * cosc * (omega_hat @ omega_hat)
+    )
+    translation_operator = (
+        length_m * np.eye(3)
+        + length_m**2 * cosc * omega_hat
+        + length_m**3 * sincc * (omega_hat @ omega_hat)
+    )
+    transform[:3, :3] = rotation
+    transform[:3, 3] = translation_operator @ np.array([0.0, 0.0, 1.0])
+    return transform
+
+
+def forward_kinematics(
+    bending: np.ndarray,
+    flexure_lengths_m: tuple[float, ...],
+    distal_offsets_m: tuple[float, ...],
+    *,
+    samples_per_segment: int = 8,
+) -> PCCResult:
+    """计算机械臂末端位姿及去重后的完整中心线。"""
+
+    if samples_per_segment < 2:
+        raise ValueError("samples_per_segment 至少为 2。")
+    if len(distal_offsets_m) != len(flexure_lengths_m):
+        raise ValueError("柔性段长度与段末偏置数量必须一致。")
+    if any(offset < 0.0 for offset in distal_offsets_m):
+        raise ValueError("段末偏置不能为负。")
+    values = _vector(bending, 2 * len(flexure_lengths_m), "bending")
+    current = np.eye(4)
+    points: list[np.ndarray] = []
+    for index, (length, distal_offset) in enumerate(
+        zip(flexure_lengths_m, distal_offsets_m, strict=True)
+    ):
+        segment_bending = values[2 * index : 2 * index + 2]
+        for sample_index, partial_length in enumerate(
+            np.linspace(0.0, float(length), samples_per_segment)
+        ):
+            if points and sample_index == 0:
+                continue
+            local = constant_curvature_transform(segment_bending, float(partial_length))
+            points.append((current @ local)[:3, 3].copy())
+        current = current @ constant_curvature_transform(segment_bending, float(length))
+        if distal_offset > 0.0:
+            # 刚性连接区保持上一段末端朝向，不参与曲率积分。
+            distal_tip = current[:3, 3] + current[:3, 2] * float(distal_offset)
+            points.append(distal_tip.copy())
+            current = current.copy()
+            current[:3, 3] = distal_tip
+    return PCCResult(current, np.asarray(points))
+
+
+def position_jacobian(
+    bending: np.ndarray,
+    flexure_lengths_m: tuple[float, ...],
+    distal_offsets_m: tuple[float, ...],
+    *,
+    step: float = 1.0e-5,
+    arc_m: float | None = None,
+) -> np.ndarray:
+    """用中心差分计算末端位置对六维弯曲坐标的雅可比。"""
+
+    values = _vector(bending, 2 * len(flexure_lengths_m), "bending")
+    if step <= 0.0:
+        raise ValueError("step 必须为正。")
+    jacobian = np.zeros((3, values.size))
+    for index in range(values.size):
+        offset = np.zeros_like(values)
+        offset[index] = step
+        plus = material_point(values + offset, flexure_lengths_m, distal_offsets_m, arc_m)
+        minus = material_point(values - offset, flexure_lengths_m, distal_offsets_m, arc_m)
+        jacobian[:, index] = (plus - minus) / (2.0 * step)
+    return jacobian
+
+
+def material_point(bending, lengths, offsets, arc_m=None):
+    """仅计算指定材料弧长的位置，差分雅可比不再生成整条中心线。"""
+    remaining = sum(lengths) + sum(offsets) if arc_m is None else float(arc_m)
+    transform = np.eye(4)
+    for i, (length, offset) in enumerate(zip(lengths, offsets, strict=True)):
+        partial = min(max(remaining, 0.0), length)
+        transform = transform @ constant_curvature_transform(bending[2*i:2*i+2], partial)
+        remaining -= partial
+        if remaining <= 0:
+            break
+        rigid = min(remaining, offset)
+        transform[:3, 3] += transform[:3, 2] * rigid
+        remaining -= rigid
+        if remaining <= 0:
+            break
+    return transform[:3, 3]
+
+
+def direction_jacobian(bending, lengths, offsets, step=1e-5):
+    values = _vector(bending, 2*len(lengths), "bending")
+    result = np.zeros((3, len(values)))
+    def axis(q):
+        rotation = np.eye(3)
+        for i, length in enumerate(lengths):
+            rotation = rotation @ constant_curvature_transform(q[2*i:2*i+2], length)[:3, :3]
+        return rotation[:, 2]
+    for i in range(len(values)):
+        delta = np.zeros_like(values)
+        delta[i] = step
+        result[:, i] = (axis(values+delta)-axis(values-delta))/(2*step)
+    return result
+
+
+def transform_points(transform: np.ndarray, points: np.ndarray) -> np.ndarray:
+    """将局部中心线变换到世界坐标系。"""
+
+    matrix = np.asarray(transform, dtype=float)
+    values = np.asarray(points, dtype=float)
+    if matrix.shape != (4, 4) or values.ndim != 2 or values.shape[1] != 3:
+        raise ValueError("transform 或 points 形状无效。")
+    homogeneous = np.column_stack((values, np.ones(values.shape[0])))
+    return (matrix @ homogeneous.T).T[:, :3]
+
+
+def _vector(values: np.ndarray, size: int, name: str) -> np.ndarray:
+    result = np.asarray(values, dtype=float)
+    if result.shape != (size,) or not np.all(np.isfinite(result)):
+        raise ValueError(f"{name} 必须是长度为 {size} 的有限向量。")
+    return result
+
+
+def _skew(vector: np.ndarray) -> np.ndarray:
+    x, y, z = vector
+    return np.array([[0.0, -z, y], [z, 0.0, -x], [-y, x, 0.0]])

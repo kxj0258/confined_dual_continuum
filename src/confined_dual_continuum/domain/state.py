@@ -15,20 +15,24 @@ class ArmState:
     bending: np.ndarray
     tendon_displacement_m: np.ndarray
     centerline_world: np.ndarray
+    contact_force_world: np.ndarray
+    pcc_tip_error_m: float | None = None
 
     def __post_init__(self) -> None:
         bending = np.asarray(self.bending, dtype=float)
         tendon = np.asarray(self.tendon_displacement_m, dtype=float)
         centerline = np.asarray(self.centerline_world, dtype=float)
+        force = vector(self.contact_force_world, 3, "contact_force_world")
         if bending.ndim != 1 or tendon.ndim != 1:
             raise ValueError("bending 和 tendon_displacement_m 必须是一维向量。")
-        if centerline.ndim != 2 or centerline.shape[1] != 3:
+        if centerline.ndim != 2 or centerline.shape[1] != 3 or len(centerline) < 2:
             raise ValueError("centerline_world 必须具有形状 (N, 3)。")
         if not all(np.all(np.isfinite(item)) for item in (bending, tendon, centerline)):
             raise ValueError("机械臂状态必须为有限值。")
         object.__setattr__(self, "bending", bending.copy())
         object.__setattr__(self, "tendon_displacement_m", tendon.copy())
         object.__setattr__(self, "centerline_world", centerline.copy())
+        object.__setattr__(self, "contact_force_world", force)
 
 
 @dataclass(frozen=True)
@@ -42,14 +46,21 @@ class RobotState:
 class ArmCommand:
     bending_rate: np.ndarray
     tendon_rate_mps: np.ndarray = field(default_factory=lambda: np.zeros(0))
+    tendon_target_m: np.ndarray = field(default_factory=lambda: np.zeros(0))
 
     def __post_init__(self) -> None:
         bending = np.asarray(self.bending_rate, dtype=float)
         tendon = np.asarray(self.tendon_rate_mps, dtype=float)
         if bending.ndim != 1 or tendon.ndim != 1:
             raise ValueError("机械臂命令必须是一维向量。")
+        if not np.all(np.isfinite(bending)) or not np.all(np.isfinite(tendon)):
+            raise ValueError("机械臂命令必须为有限值。")
         object.__setattr__(self, "bending_rate", bending.copy())
         object.__setattr__(self, "tendon_rate_mps", tendon.copy())
+        target = np.asarray(self.tendon_target_m, dtype=float)
+        if target.ndim != 1 or not np.all(np.isfinite(target)):
+            raise ValueError("肌腱目标必须为有限一维向量。")
+        object.__setattr__(self, "tendon_target_m", target.copy())
 
 
 @dataclass(frozen=True)
@@ -64,4 +75,3 @@ class RobotCommand:
             "base_twist_world",
             vector(self.base_twist_world, 6, "base_twist_world"),
         )
-

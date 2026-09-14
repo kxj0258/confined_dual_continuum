@@ -1,17 +1,34 @@
-segment_lengths_m: [0.0365, 0.0365, 0.0365]
+# 每段由可弯曲柔性体和段末刚性连接区组成。
+flexure_lengths_m: [0.0365, 0.0365, 0.0365]
+distal_offsets_m: [0.0035, 0.0035, 0.0035]
 tendon_routes:
-  - {angle_deg: 60, radial_offset_m: 0.005, path_segment_indices: [0]}
-  - {angle_deg: 180, radial_offset_m: 0.005, path_segment_indices: [0]}
-  - {angle_deg: 300, radial_offset_m: 0.005, path_segment_indices: [0]}
-  - {angle_deg: 0, radial_offset_m: 0.005, path_segment_indices: [0, 1]}
-  - {angle_deg: 120, radial_offset_m: 0.005, path_segment_indices: [0, 1]}
-  - {angle_deg: 240, radial_offset_m: 0.005, path_segment_indices: [0, 1]}
-  - {angle_deg: 90, radial_offset_m: 0.005, path_segment_indices: [0, 1, 2]}
-  - {angle_deg: 210, radial_offset_m: 0.005, path_segment_indices: [0, 1, 2]}
-  - {angle_deg: 330, radial_offset_m: 0.005, path_segment_indices: [0, 1, 2]}
+  executor:
+    - {angle_deg: 60, radial_offset_m: 0.005, path_segment_indices: [0]}
+    - {angle_deg: 180, radial_offset_m: 0.005, path_segment_indices: [0]}
+    - {angle_deg: 300, radial_offset_m: 0.005, path_segment_indices: [0]}
+    - {angle_deg: 0, radial_offset_m: 0.005, path_segment_indices: [0, 1]}
+    - {angle_deg: 120, radial_offset_m: 0.005, path_segment_indices: [0, 1]}
+    - {angle_deg: 240, radial_offset_m: 0.005, path_segment_indices: [0, 1]}
+    - {angle_deg: 90, radial_offset_m: 0.005, path_segment_indices: [0, 1, 2]}
+    - {angle_deg: 210, radial_offset_m: 0.005, path_segment_indices: [0, 1, 2]}
+    - {angle_deg: 330, radial_offset_m: 0.005, path_segment_indices: [0, 1, 2]}
+  observer:
+    - {angle_deg: 0, radial_offset_m: 0.005, path_segment_indices: [0]}
+    - {angle_deg: 120, radial_offset_m: 0.005, path_segment_indices: [0]}
+    - {angle_deg: 240, radial_offset_m: 0.005, path_segment_indices: [0]}
+    - {angle_deg: 60, radial_offset_m: 0.005, path_segment_indices: [0, 1]}
+    - {angle_deg: 180, radial_offset_m: 0.005, path_segment_indices: [0, 1]}
+    - {angle_deg: 300, radial_offset_m: 0.005, path_segment_indices: [0, 1]}
+    - {angle_deg: 30, radial_offset_m: 0.005, path_segment_indices: [0, 1, 2]}
+    - {angle_deg: 150, radial_offset_m: 0.005, path_segment_indices: [0, 1, 2]}
+    - {angle_deg: 270, radial_offset_m: 0.005, path_segment_indices: [0, 1, 2]}
 limits:
+  # 本次诊断实验关闭曲率圆盘和肌腱速率限制，仅用于区分约束对跟踪误差的影响。
+  enabled: false
+  rate_enabled: false
+  maximum_curvature_per_m: null
   minimum_m: -0.020
   maximum_m: 0.020
-  maximum_rate_mps: 0.050
+  maximum_rate_mps: 0.005
   maximum_lead_m: 0.0005
 

@@ -1,0 +1,46 @@
+# 待手动校准的固定基座任务，不是已通过的实验参数。
+task_type: fixed_base_tracking
+robot_config: ../robot/three_segment_nine_tendon.yaml
+mujoco_xml: ../../assets/mujoco/multi_task_patent_demo.xml
+output_directory: ../../outputs/fixed_tracking
+# 显式读取当前已有样本；设为 null 才使用配置偏置，路径缺失会报错。
+observation_samples: ../../outputs/drive_workspace_diagnostics/20260911T075547Z-b8a792c9/samples.jsonl
+control_period_s: 0.01
+trajectory:
+  # mobile_base_frame 坐标；五次插值在每个航点处速度、加速度为零。
+  times_s: [0, 8, 16, 24, 32, 40]
+  points_base_m:
+    - [0.000, 0.010, 0.140]
+    - [0.012, 0.018, 0.137]
+    - [0.018, 0.026, 0.133]
+    - [0.006, 0.030, 0.135]
+    - [-0.006, 0.020, 0.138]
+    - [0.000, 0.010, 0.140]
+control:
+  gain: 2.0
+  maximum_curvature_per_m: 13.5
+  maximum_tendon_speed_mps: 0.001
+  clearance_m: 0.003
+  critical_clearance_m: 0.0005
+  joint_margin_rad: 0.00872664626
+  observation_distance_m: 0.04
+  offset_switch_s: 2.0
+  observer_offsets_base_m:
+    - [0.000, -0.025, -0.025]
+    - [0.025, -0.020, -0.025]
+    - [-0.025, -0.020, -0.025]
+camera:
+  # fovy 从实际 XML 相机读取，避免投影判据与渲染参数不一致。
+  width: 640
+  height: 480
+  near_m: 0.01
+  far_m: 0.15
+  edge_fraction: 0.10
+  target_radius_m: 0.001
+obstacles:
+  - name: side_sphere
+    type: sphere
+    position_base_m: [0.020, -0.030, 0.105]
+    size_m: [0.006]
+video:
+  fps: 20

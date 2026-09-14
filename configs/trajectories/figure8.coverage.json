@@ -1,0 +1,14 @@
+{
+  "passed": true,
+  "body_in_inner_80_percent": true,
+  "entry_points": 51,
+  "body_points": 225,
+  "maximum_nearest_distance_m": 0.0037230283651958048,
+  "continuous_distance_upper_bound_m": 0.003973028365195805,
+  "tolerance_m": 0.004215974805911969,
+  "verdict": "sampled_pointcloud_coverage_only",
+  "version": 1,
+  "definition_sha256": "a0a610275cc0b4672fafdf5965a4ea0fff4db452f39105e816e49e649463171d",
+  "workspace_sha256": "3b2ba0efe118bde3fb4ae56e6285b20b716c6643cfc6eeb2479b91ad9423e154",
+  "cloud_sha256": "1aa67a47fd4e91a9d3dec62c04b6b6132d75bd8effe9a3304aa21ce451fe3701"
+}

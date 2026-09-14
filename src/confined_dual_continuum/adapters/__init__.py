@@ -1,4 +1,5 @@
-from confined_dual_continuum.adapters.backend import RobotBackend
+"""外部运行环境适配器。"""
 
-__all__ = ["RobotBackend"]
+from confined_dual_continuum.adapters.mujoco_backend import MujocoRobotBackend
 
+__all__ = ["MujocoRobotBackend"]

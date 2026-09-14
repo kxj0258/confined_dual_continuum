@@ -12,8 +12,8 @@ class Clearance:
     point_world: np.ndarray
     normal_world: np.ndarray
     source: str
+    arm_arc_m: float = 0.0
 
 
 class WorkspaceQuery(Protocol):
-    def nearest_clearance(self, points_world: np.ndarray) -> Clearance: ...
-
+    def nearest_clearance(self, arm: str, *, allow_tool_contact: bool) -> Clearance: ...

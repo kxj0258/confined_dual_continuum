@@ -1,4 +1,3 @@
 name: raw_vs_compatible_tendon
 variants: [independent_clipping, bending_compatible]
-metrics: [compatibility_residual, tracking_error_m, saturation_count, target_lead_m]
-
+metrics: [maximum_compatibility_residual, maximum_actual_residual, executor_tracking_rmse_m, saturation_count, maximum_target_lead_m]

@@ -1,0 +1,43 @@
+# 独立双臂入口；主从控制周期均为 50 ms，主臂不等待从臂。
+robot_config: ../robot/three_segment_nine_tendon.yaml
+mujoco_xml: ../../assets/mujoco/multi_task_patent_demo.xml
+trajectory_directory: ../trajectories
+output_directory: ../../outputs/executor_observer_tracking
+control_hz: 20
+time_scale: 1.0
+gain: 2.0
+damping: 0.0001
+joint_margin_deg: 0.5
+joint_guard_enabled: false
+error_window:
+  enabled: true
+  refresh_hz: 20
+observer:
+  avoidance_gain: 5.0
+  orientation_gain: 1.0
+  orientation_feedforward_gain: 1.5
+  clearance_m: 0.005
+  diameter_m: 0.0125
+  active_constraints: 3
+  avoidance_trigger_m: 0.007
+  avoidance_release_m: 0.010
+  joint_margin_deg: 0.5
+  joint_guard_enabled: false
+  budget_ms: 45
+  iterations: 20
+  failure_cooldown_s: 0.0
+video:
+  enabled: true
+  fps: 20
+  width: 640
+  height: 480
+  queue_size: 8
+  viewer: true
+  camera_window: true
+  global_follow:
+    enabled: true
+    filename: global.mp4
+    distance_m: 0.32
+    azimuth_deg: 135.0
+    elevation_deg: -20.0
+    look_at_offset_m: [0.0, 0.0, 0.09]

@@ -1,10 +1,40 @@
 name: confined_dual_operation
-workspace: engine_embodiment
-controller:
-  phases: [initialize, base_approach, cooperative_insertion, base_lock, local_operation, retreat, complete]
-  observer_mode: task_assist
-  compatible_tendon_control: true
-diagnostics:
-  save_timeseries: true
-  save_metrics: true
+feedback:
+  centerline_source: pcc
+  tip_pose_source: mujoco
+robot_config: ../robot/three_segment_nine_tendon.yaml
+workspace_config: ../workspace/multi_task_patent_bench.yaml
+mujoco_xml: ../../assets/mujoco/multi_task_patent_demo.xml
+output_directory: ../../outputs/confined_dual_operation
 
+runtime:
+  control_period_s: 0.01
+  maximum_duration_s: 180.0
+
+viewer:
+  look_at_world_m: [0.03, 0.0, 0.14]
+  distance_m: 0.85
+  azimuth_deg: 135.0
+  elevation_deg: -20.0
+
+video:
+  width: 640
+  height: 480
+  fps: 30
+  filename: observer_inspection.mp4
+  global_follow:
+    enabled: true
+    filename: global_follow.mp4
+    look_at_offset_m: [0.0, 0.0, 0.08]
+    distance_m: 0.45
+    azimuth_deg: 135.0
+    elevation_deg: -20.0
+
+task:
+  position_tolerance_m: 0.005
+  base_gain: 1.5
+  maximum_base_speed_mps: 0.10
+  waypoint_duration_s: 2.0
+  wiping_force_n: 1.0
+  observer_offset_m: 0.025
+  straight_executor_tip_offset_m: [0.0, 0.01, 0.14]

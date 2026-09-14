@@ -1,4 +1,3 @@
 name: staged_vs_always_active
 variants: [always_active, staged_activation]
-metrics: [base_drift_m, executor_tracking_error_m, completion]
-
+metrics: [executor_tracking_rmse_m, observer_tracking_rmse_m, completed, termination_reason]

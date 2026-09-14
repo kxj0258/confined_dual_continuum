@@ -1,0 +1,32 @@
+name: figure8
+kind: figure8
+center_m:
+- 0.0002168457389701839
+- -0.013569665158121743
+- 0.13275543946776291
+u:
+- 1.0
+- 0.0
+- 0.0
+v:
+- 0.0
+- 0.766044443118978
+- -0.6427876096865393
+half_sizes_m:
+- 0.01176199361969954
+- 0.002940498404924885
+entry_s: 6.0
+motion_s: 20.0
+entry_points_m:
+- - 0.0
+  - 0.01
+  - 0.14
+- - 0.0002168457389701839
+  - -0.013569665158121743
+  - 0.13275543946776291
+search:
+  central_span_fraction: 0.8
+  centers: 35
+  planes: 9
+  size_resolution_m: 0.001
+  objective: largest_primary_half_size_among_tested_candidates

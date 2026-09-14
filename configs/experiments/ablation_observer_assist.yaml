@@ -1,4 +1,3 @@
 name: fixed_vs_task_assist_observer
 variants: [fixed_target, task_assist]
-metrics: [observer_error_m, inter_arm_distance_m, task_point_offset_m]
-
+metrics: [observer_tracking_rmse_m, minimum_inter_arm_distance_m, completed, termination_reason]

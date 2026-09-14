@@ -1,0 +1,17 @@
+# 先做两臂分别的第一段 kx 正/负响应；不采集大规模可达点云。
+robot_config: ../robot/three_segment_nine_tendon.yaml
+mujoco_xml: ../../assets/mujoco/multi_task_patent_demo.xml
+output_directory: ../../outputs/response_diagnostics
+arms: [executor, observer]
+feedback:
+  centerline_source: pcc
+  tip_pose_source: mujoco
+probe:
+  control_period_s: 0.01
+  amplitude_per_m: 1.0
+  axes: [0]
+  settle_s: 1.0
+  ramp_s: 1.0
+  hold_s: 1.0
+  return_s: 1.0
+  rest_s: 1.0

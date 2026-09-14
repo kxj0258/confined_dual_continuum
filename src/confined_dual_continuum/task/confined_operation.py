@@ -11,12 +11,8 @@ from confined_dual_continuum.task.phase_machine import (
 
 @dataclass(frozen=True)
 class OperationSignals:
-    initialized: bool = False
-    base_at_entry: bool = False
-    insertion_complete: bool = False
-    base_locked: bool = False
-    local_operation_complete: bool = False
-    retreat_complete: bool = False
+    phase_complete: bool = False
+    completion_reason: str = ""
     safety_violation: str | None = None
 
 
@@ -35,10 +31,13 @@ class ConfinedOperationSupervisor:
         self.machine = ConfinedOperationStateMachine()
 
     def update(self, signals: OperationSignals) -> PhaseDecision:
-        if signals.safety_violation and not self.machine.terminal:
+        if signals.safety_violation:
             self.machine.safety_stop(signals.safety_violation)
-        elif self._phase_complete(signals):
-            self.machine.advance(self._completion_reason())
+        elif self.machine.terminal:
+            pass
+        elif signals.phase_complete:
+            reason = signals.completion_reason or f"{self.machine.phase.value}_complete"
+            self.machine.advance(reason)
         else:
             self.machine.tick()
         return PhaseDecision(
@@ -47,16 +46,3 @@ class ConfinedOperationSupervisor:
             phase_step=self.machine.phase_step,
             transition_reason=self.machine.transition_reason,
         )
-
-    def _phase_complete(self, signals: OperationSignals) -> bool:
-        return {
-            ConfinedOperationPhase.INITIALIZE: signals.initialized,
-            ConfinedOperationPhase.BASE_APPROACH: signals.base_at_entry,
-            ConfinedOperationPhase.COOPERATIVE_INSERTION: signals.insertion_complete,
-            ConfinedOperationPhase.BASE_LOCK: signals.base_locked,
-            ConfinedOperationPhase.LOCAL_OPERATION: signals.local_operation_complete,
-            ConfinedOperationPhase.RETREAT: signals.retreat_complete,
-        }.get(self.machine.phase, False)
-
-    def _completion_reason(self) -> str:
-        return f"{self.machine.phase.value}_complete"
